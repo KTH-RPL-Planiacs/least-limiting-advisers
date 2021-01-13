@@ -4,6 +4,7 @@ from ltlf2dfa.ltlf2dfa import invoke_mona, createMonafile
 
 import networkx as nx
 import pygraphviz
+import matplotlib.pyplot as plt
 
 import re
 
@@ -55,7 +56,7 @@ def formula_to_nxgraph(f):
     for succ in g.successors('init'):
         init.append(succ)
 
-    g.graph['init'] = init
+    g.graph['init'] = init[0]
     g.remove_node('init')
 
     # adds alternate edge labels that are easier to parse, but harder to read
@@ -65,7 +66,7 @@ def formula_to_nxgraph(f):
         return g
 
     variables = get_value(mona, r'.*DFA for formula with free variables:[\s]*(.*?)\n.*', str)
-    g.graph['vars'] = variables.split()
+    g.graph['ap'] = variables.split()
 
     for line in mona.splitlines():
         if line.startswith("State "):
@@ -78,17 +79,29 @@ def formula_to_nxgraph(f):
                 # already deleted dummy state
                 continue
             
-            g.add_edge(orig_state, dest_state, guard= guard )
+            if 'guard' in g.edges[orig_state, dest_state]:
+                new_guard = g.edges[orig_state, dest_state]['guard']
+                new_guard.append(guard)
+                g.add_edge(orig_state, dest_state, guard= new_guard )
+            else:
+                g.add_edge(orig_state, dest_state, guard= [guard] )
+            
 
     return g
 
 
 if __name__ == '__main__':
-    f = "G(a -> X b)"
+    f = "G(req -> F on)"
+    print(formula_to_mona_output(f))
+    print(formula_to_dot(f))
     g = formula_to_nxgraph(f)
 
+    nx.draw(g)
+    plt.draw()
+    plt.show()
+
     print(g)
-    print('variables:', g.graph['vars'])
+    print('atomic propositions:', g.graph['ap'])
     print('initial states:', g.graph['init'])
     print('accepting states:', g.graph['acc'])
     print('nodes:', g.nodes())
