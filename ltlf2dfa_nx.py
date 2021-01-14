@@ -19,21 +19,23 @@ def get_value(text, regex, value_type=float):
         print("Could not find the value {}, in the text provided".format(regex))
         return value_type(0.0)
 
+
 def formula_to_dot(formula_str):
     parser = LTLfParser()
-    formula = parser(formula_str)       
+    formula = parser(formula_str)
     return formula.to_dfa()
+
 
 def formula_to_mona_output(formula_str):
     parser = LTLfParser()
-    formula = parser(formula_str)       
+    formula = parser(formula_str)
     mona_p_string = MonaProgram(formula).mona_program()
     createMonafile(mona_p_string)
     mona = invoke_mona()
     return mona
 
-def formula_to_nxgraph(f):
 
+def formula_to_nxgraph(f, name='MONA_DFA'):
     dot = formula_to_dot(f)
     mona = formula_to_mona_output(f)
 
@@ -41,6 +43,7 @@ def formula_to_nxgraph(f):
     g = nx.drawing.nx_agraph.from_agraph(pygraphviz.AGraph(dot))
     # enforce directed graph (instead of MultiDiGraph)
     g = nx.DiGraph(g)
+    g.graph['name'] = name
 
     # re-label all shape doublecircle nodes as accepting nodes
     acc = []
@@ -78,14 +81,13 @@ def formula_to_nxgraph(f):
             if orig_state == '0':
                 # already deleted dummy state
                 continue
-            
+
             if 'guard' in g.edges[orig_state, dest_state]:
                 new_guard = g.edges[orig_state, dest_state]['guard']
                 new_guard.append(guard)
-                g.add_edge(orig_state, dest_state, guard= new_guard )
+                g.add_edge(orig_state, dest_state, guard=new_guard)
             else:
-                g.add_edge(orig_state, dest_state, guard= [guard] )
-            
+                g.add_edge(orig_state, dest_state, guard=[guard])
 
     return g
 
@@ -106,4 +108,3 @@ if __name__ == '__main__':
     print('accepting states:', g.graph['acc'])
     print('nodes:', g.nodes())
     print('edges:', g.edges(data=True))
-

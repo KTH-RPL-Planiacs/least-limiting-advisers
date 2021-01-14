@@ -1,5 +1,6 @@
 import networkx as nx
 import queue
+import time
 from itertools import chain, combinations
 from copy import deepcopy
 
@@ -36,6 +37,7 @@ def create_guard(opt, ap):
 
 def dfa_mdp_synth(dfa, mdp):
     synth = nx.DiGraph()
+    synth.graph['name'] = mdp.graph['name'] + 'x' + dfa.graph['name']
     synth.graph['acc'] = []  # list of accepting states
 
     # initial state
@@ -142,6 +144,7 @@ if __name__ == '__main__':
     # dummy mdp
     # player 1 states
     nx_mdp = nx.DiGraph()
+    nx_mdp.graph['name'] = 'DUMMY_MDP'
     nx_mdp.add_node("off", player=1, ap=["10"])
     nx_mdp.add_node("on", player=1, ap=["01"])
     # probabilistic states
@@ -168,7 +171,9 @@ if __name__ == '__main__':
     # DFA from LTL formula
     nx_dfa = formula_to_nxgraph("G(req -> F on)")
 
+    start_time = time.time()
     # synthesis game according to paper
     synth_prod = dfa_mdp_synth(nx_dfa, nx_mdp)
-    for edge in synth_prod.edges(data=True):
-        print(edge)
+    print('Created synthesis game:', synth_prod.graph['name'])
+    print(len(synth_prod.nodes), 'states,', len(synth_prod.edges), 'edges')
+    print('Took', time.time() - start_time, 'seconds.')
