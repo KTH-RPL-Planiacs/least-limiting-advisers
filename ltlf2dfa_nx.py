@@ -4,7 +4,6 @@ from ltlf2dfa.ltlf2dfa import invoke_mona, createMonafile
 
 import networkx as nx
 import pygraphviz
-import matplotlib.pyplot as plt
 
 import re
 

@@ -1,10 +1,7 @@
 import networkx as nx
 import queue
-import time
 from itertools import chain, combinations
 from copy import deepcopy
-
-from ltlf2dfa_nx import formula_to_nxgraph
 
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
