@@ -7,10 +7,19 @@ def read_results(file):
 
     return results
 
+
 def write_safass_prop():
     file_name = 'data/safass.prop'
     prism_file = open(file_name, 'w')
     prism_file.write('filter(printall, << p1,p2 >> Pmax =? [F "accept"])')
+    prism_file.close()
+    return file_name
+
+
+def write_win_prop():
+    file_name = 'data/win.prop'
+    prism_file = open(file_name, 'w')
+    prism_file.write('<< p1 >> Pmax =? [F "accept"]')
     prism_file.close()
     return file_name
 

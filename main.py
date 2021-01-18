@@ -1,9 +1,10 @@
 from ltlf2dfa_nx import formula_to_nxgraph
 from dfa_mdp_prod import dfa_mdp_synth
-from prism_interface import write_prism_model, write_safass_prop, read_results
+from prism_interface import write_prism_model, write_safass_prop, read_results, write_win_prop
 from minimal_assumptions import minimal_safety_assumptions, minimal_fairness_assumptions, simplest_safety_adviser
 
 import time
+import sys
 import networkx as nx
 import subprocess
 
@@ -39,13 +40,14 @@ def dummy_mdp():
 
 
 if __name__ == '__main__':
+    abs_start_time = time.time()
     # path to PRISM-games bin
     prism_games = '/home/gschup/prism-games-3.0-src/prism/bin/prism'
     # dummy mdp
     nx_mdp = dummy_mdp()
 
     # DFA from LTL formula
-    # ltlf_formula = 'G(req -> F on)'
+    #ltlf_formula = 'G(req -> F on)'
     ltlf_formula = 'G(! req)'
     nx_dfa = formula_to_nxgraph(ltlf_formula)
 
@@ -61,9 +63,28 @@ if __name__ == '__main__':
         start_time = time.time()
         prism_model, state_ids = write_prism_model(synth_prod)
         safass_prop = write_safass_prop()
+        win_prop = write_win_prop()
 
         print('Translated synthesis game to PRISM.')
         print('Took', time.time() - start_time, 'seconds. \n')
+
+        # call PRISM-games to see if there exists a strategy
+        start_time = time.time()
+        process = subprocess.run(
+            [prism_games, '%s' % prism_model, '%s' % win_prop, '-exportresults', 'data/win_results'],
+            stdout=subprocess.PIPE,
+            universal_newlines=True)
+        result_file = open('data/win_results', 'r')
+        result = None
+        for line in result_file:
+            if not line.startswith('Result'):
+                result = float(line)
+        print('Called PRISM-games to compute strategy.')
+        print('Took', time.time() - start_time, 'seconds. \n')
+
+        if result >= 1:
+            print('No adviser computation necessary, winning strategy already exists!')
+            sys.exit()
 
         # call PRISM-games to compute cooperative safe set
         start_time = time.time()
@@ -80,8 +101,13 @@ if __name__ == '__main__':
         saf_adv = simplest_safety_adviser(synth_prod, safass_edges)
         print('Computed minimal set of safety assumptions.')
         print('Took', time.time() - start_time, 'seconds. \n')
+        if not saf_adv:
+            print('No safety assumptions necessary!')
         for adv in saf_adv:
             print('If you see', adv[0], synth_prod.graph['ap'], 'never do', adv[1], synth_prod.graph['env_ap'])
 
     except Exception as err:
         print(err)
+
+    print('')
+    print('Took', time.time() - abs_start_time, 'seconds in total. \n')
