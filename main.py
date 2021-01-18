@@ -1,6 +1,7 @@
 from ltlf2dfa_nx import formula_to_nxgraph
 from dfa_mdp_prod import dfa_mdp_synth
-from synth2prism import write_prism_model, write_safass_prop
+from prism_interface import write_prism_model, write_safass_prop, read_results
+from minimal_assumptions import minimal_safety_assumptions, minimal_fairness_assumptions, simplest_safety_adviser
 
 import time
 import networkx as nx
@@ -58,22 +59,29 @@ if __name__ == '__main__':
     # PRISM computations
     try:
         start_time = time.time()
-        # translate model to PRISM
         prism_model, state_ids = write_prism_model(synth_prod)
-        # compute safety assumption
         safass_prop = write_safass_prop()
 
         print('Translated synthesis game to PRISM.')
         print('Took', time.time() - start_time, 'seconds. \n')
 
+        # call PRISM-games to compute cooperative safe set
         start_time = time.time()
-        # call PRISM-games
-        process = subprocess.run([prism_games, "%s" % prism_model, "%s" % safass_prop],
+        process = subprocess.run([prism_games, '%s' % prism_model, '%s' % safass_prop, '-exportvector', 'data/safass_results'],
                                  stdout=subprocess.PIPE,
                                  universal_newlines=True)
-        # print(process.stdout)
-        print('Used PRISM-games to compute minimal safety assumption edges')
-        print('Took', time.time() - start_time, 'seconds.')
+        reach_probs = read_results('data/safass_results')
+        print('Called PRISM-games to compute cooperative reachability objective.')
+        print('Took', time.time() - start_time, 'seconds. \n')
+
+        # compute simplest safety advisers
+        start_time = time.time()
+        safass_edges = minimal_safety_assumptions(synth_prod, state_ids, reach_probs)
+        saf_adv = simplest_safety_adviser(synth_prod, safass_edges)
+        print('Computed minimal set of safety assumptions.')
+        print('Took', time.time() - start_time, 'seconds. \n')
+        for adv in saf_adv:
+            print('If you see', adv[0], synth_prod.graph['ap'], 'never do', adv[1], synth_prod.graph['env_ap'])
 
     except Exception as err:
         print(err)

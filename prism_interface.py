@@ -1,3 +1,12 @@
+def read_results(file):
+    result_file = open(file, 'r')
+    results = []
+
+    for line in result_file:
+        results.append(float(line))
+
+    return results
+
 def write_safass_prop():
     file_name = 'data/safass.prop'
     prism_file = open(file_name, 'w')

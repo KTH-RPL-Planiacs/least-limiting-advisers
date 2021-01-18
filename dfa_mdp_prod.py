@@ -45,7 +45,7 @@ def dfa_mdp_synth(dfa, mdp):
     if dfa_init in dfa.graph['acc']:
         synth.graph['acc'].append(synth_init)
 
-    synth.add_node(synth_init, player=1, ap=mdp.nodes[mdp_init]['ap'])
+    synth.add_node(synth_init, player=1, ap=mdp.nodes[mdp_init]['ap'][0])
     synth.graph['init'] = synth_init
 
     # dfa and mdp atomic propositions
@@ -53,6 +53,7 @@ def dfa_mdp_synth(dfa, mdp):
     mdp_ap = mdp.graph['ap']
     synth.graph['ap'] = mdp_ap  # order sensitive because of the edge guards
     env_ap = list(set(dfa_ap).difference(set(mdp_ap)))  # order sensitive
+    synth.graph['env_ap'] = env_ap
     joined_ap = mdp_ap + env_ap
 
     # queue of open states
@@ -130,11 +131,13 @@ def dfa_mdp_synth(dfa, mdp):
                 dfa_succ = synth_succ[1]
 
                 if not synth.has_node(synth_succ):
-                    synth.add_node(synth_succ, player=1, ap=mdp.nodes[mdp_succ]['ap'])
+                    synth.add_node(synth_succ, player=1, ap=mdp.nodes[mdp_succ]['ap'][0])
                     if dfa_succ in dfa.graph['acc']:
                         synth.graph['acc'].append(synth_succ)
                     que.put(synth_succ)  # put new states in queue
                 synth.add_edge(synth_from, synth_succ, prob=mdp.edges[mdp_from, mdp_succ]['prob'])
+
+            del synth.nodes[synth_from]['res']
 
     return synth
 
