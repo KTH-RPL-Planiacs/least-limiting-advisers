@@ -37,7 +37,7 @@ def create_guard(opt, ap):
 
 def dfa_mdp_synth(dfa, mdp):
     synth = nx.DiGraph()
-    synth.graph['name'] = mdp.graph['name'] + 'x' + dfa.graph['name']
+    synth.graph['name'] = mdp.graph['name'] + '_x_' + dfa.graph['name']
     synth.graph['acc'] = []  # list of accepting states
 
     # initial state
@@ -58,7 +58,7 @@ def dfa_mdp_synth(dfa, mdp):
     env_ap = list(set(dfa_ap).difference(set(mdp_ap)))  # order sensitive
     joined_ap = mdp_ap + env_ap
 
-    # todo queue
+    # queue of open states
     que = queue.Queue()
     que.put(synth_init)  # initialize the queue
 
@@ -134,46 +134,10 @@ def dfa_mdp_synth(dfa, mdp):
 
                 if not synth.has_node(synth_succ):
                     synth.add_node(synth_succ, player=1, ap=mdp.nodes[mdp_succ]['ap'])
+                    if dfa_succ in dfa.graph['acc']:
+                        synth.graph['acc'].append(synth_succ)
                     que.put(synth_succ)  # put new states in queue
                 synth.add_edge(synth_from, synth_succ, prob=mdp.edges[mdp_from, mdp_succ]['prob'])
 
     return synth
 
-
-if __name__ == '__main__':
-    # dummy mdp
-    # player 1 states
-    nx_mdp = nx.DiGraph()
-    nx_mdp.graph['name'] = 'DUMMY_MDP'
-    nx_mdp.add_node("off", player=1, ap=["10"])
-    nx_mdp.add_node("on", player=1, ap=["01"])
-    # probabilistic states
-    nx_mdp.add_node("off_wait", player=0)
-    nx_mdp.add_node("off_switch", player=0)
-    nx_mdp.add_node("on_wait", player=0)
-    nx_mdp.add_node("on_switch", player=0)
-    # player 1 edges
-    nx_mdp.add_edge("off", "off_wait", act="wait")
-    nx_mdp.add_edge("off", "off_switch", act="switch")
-    nx_mdp.add_edge("on", "on_wait", act="wait")
-    nx_mdp.add_edge("on", "on_switch", act="switch")
-    # probabilistic edges
-    nx_mdp.add_edge("off_wait", "off", prob=1)
-    nx_mdp.add_edge("off_switch", "on", prob=0.9)
-    nx_mdp.add_edge("off_switch", "off", prob=0.1)
-    nx_mdp.add_edge("on_wait", "on", prob=1)
-    nx_mdp.add_edge("on_switch", "off", prob=0.9)
-    nx_mdp.add_edge("on_switch", "on", prob=0.1)
-    # graph information
-    nx_mdp.graph['init'] = "off"
-    nx_mdp.graph['ap'] = ["OFF", "ON"]  # all uppercase required, order sensitive
-
-    # DFA from LTL formula
-    nx_dfa = formula_to_nxgraph("G(req -> F on)")
-
-    start_time = time.time()
-    # synthesis game according to paper
-    synth_prod = dfa_mdp_synth(nx_dfa, nx_mdp)
-    print('Created synthesis game:', synth_prod.graph['name'])
-    print(len(synth_prod.nodes), 'states,', len(synth_prod.edges), 'edges')
-    print('Took', time.time() - start_time, 'seconds.')

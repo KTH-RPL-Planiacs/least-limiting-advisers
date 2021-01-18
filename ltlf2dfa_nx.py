@@ -92,19 +92,3 @@ def formula_to_nxgraph(f, name='MONA_DFA'):
     return g
 
 
-if __name__ == '__main__':
-    f = "G(req -> F on)"
-    print(formula_to_mona_output(f))
-    print(formula_to_dot(f))
-    g = formula_to_nxgraph(f)
-
-    nx.draw(g)
-    plt.draw()
-    plt.show()
-
-    print(g)
-    print('atomic propositions:', g.graph['ap'])
-    print('initial states:', g.graph['init'])
-    print('accepting states:', g.graph['acc'])
-    print('nodes:', g.nodes())
-    print('edges:', g.edges(data=True))
