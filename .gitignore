@@ -1,5 +1,10 @@
-# everything in data folder
+# everything in folder
 data/*
+examples/*
+.vscode/*
+
+# all java .class files
+*.class
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
