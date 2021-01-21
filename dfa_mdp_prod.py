@@ -136,7 +136,7 @@ def dfa_mdp_synth(dfa, mdp):
                         synth.graph['acc'].append(synth_succ)
                     que.put(synth_succ)  # put new states in queue
                 synth.add_edge(synth_from, synth_succ, prob=mdp.edges[mdp_from, mdp_succ]['prob'])
-
+            # res is only temporarily needed for creation of player 3 state successors, not in the final product
             del synth.nodes[synth_from]['res']
 
     return synth

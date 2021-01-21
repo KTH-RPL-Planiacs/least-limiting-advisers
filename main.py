@@ -8,7 +8,7 @@ from py4j.protocol import Py4JNetworkError
 from ltlf2dfa_nx import formula_to_nxgraph
 from dfa_mdp_prod import dfa_mdp_synth
 from prism_interface import write_prism_model
-from minimal_assumptions import minimal_safety_assumptions, simplest_safety_adviser
+from minimal_assumptions import *
 
 
 def dummy_mdp():
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     try:
         gateway = JavaGateway()
         prism_handler = gateway.entry_point.getPrismHandler()
-        print('Connected to Java PRISM gateway!')
+        print('Successfully connected to PRISM java gateway!')
     except Py4JNetworkError as err:
         print('Py4JNetworkError:', err)
         print('It is most likely that you forgot to start the PRISM java gateway. '
@@ -83,11 +83,14 @@ if __name__ == '__main__':
     prism_handler.loadModelFile('../'+prism_model)   # java handler is in a subfolder
     result = prism_handler.checkProperty(win_prop)
     print('Called PRISM-games to compute strategy.')
-    print('Took', time.time() - start_time, 'seconds. \n')
 
     if result[0] >= 1:  # initial state always has id 0
         print('No adviser computation necessary, winning strategy already exists!')
+        print('Took', time.time() - start_time, 'seconds.\n')
         sys.exit()
+    else:
+        print('Winning strategy does not exist, will compute minimal safety assumptions.')
+        print('Took', time.time() - start_time, 'seconds.\n')
 
     # call PRISM-games to compute cooperative safe set
     start_time = time.time()
@@ -97,21 +100,29 @@ if __name__ == '__main__':
     res_copy = []
     for res in result:
         res_copy.append(res)
-    print(res_copy)
 
     print('Called PRISM-games to compute cooperative reachability objective.')
     print('Took', time.time() - start_time, 'seconds. \n')
 
     # compute simplest safety advisers
     start_time = time.time()
-    safass_edges = minimal_safety_assumptions(synth_prod, state_ids, res_copy)
-    saf_adv = simplest_safety_adviser(synth_prod, safass_edges)
-    print('Computed minimal set of safety assumptions.')
-    print('Took', time.time() - start_time, 'seconds. \n')
-    if not saf_adv:
-        print('No safety assumptions necessary!')
-    for adv in saf_adv:
-        print('If you see', adv[0], synth_prod.graph['ap'], 'never do', list(adv[1]), synth_prod.graph['env_ap'])
+    safety_edges = minimal_safety_edges(synth_prod, state_ids, res_copy)
+    ssa = simplest_safety_adviser(synth_prod, safety_edges)
+    delete_unsafe_edges_ssa(synth_prod, ssa)    # alternative: delete_unsafe_edges(synth_prod, safety_edges)
 
-    print('')
+    print('Computed and removed minimal set of safety assumptions.')
+    print_ssa(synth_prod, ssa)
+    print('Took', time.time() - start_time, 'seconds. \n')
+
+    # check if there is a winning strategy now
+    start_time = time.time()
+    safe_prism_model, state_ids = write_prism_model(synth_prod)
+    prism_handler.loadModelFile('../' + prism_model)  # java handler is in a subfolder
+    result = prism_handler.checkProperty(win_prop)
+    print('Called PRISM-games to compute strategy on game with safety assumptions.')
+    if result[0] >= 1.0:
+        print('Winning strategy exists.')
+    else:
+        print('Additional fairness needed.')
+    print('Took', time.time() - start_time, 'seconds. \n')
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')
