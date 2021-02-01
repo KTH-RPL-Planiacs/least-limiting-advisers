@@ -6,7 +6,7 @@ from py4j.protocol import Py4JNetworkError
 
 # OTHER CODE #
 from ltlf2dfa_nx import LTLf2nxParser
-from dfa_mdp_prod import dfa_mdp_synth
+from agent_synth_game import AgentSynthGame
 from prism_interface import write_prism_model
 from safety_assumptions import *
 
@@ -77,14 +77,15 @@ if __name__ == '__main__':
 
     # synthesis game according to paper
     start_time = time.time()
-    synth_prod = dfa_mdp_synth(nx_dfa, nx_mdp)
-    print('Created synthesis game:', synth_prod.graph['name'])
-    print(len(synth_prod.nodes), 'states,', len(synth_prod.edges), 'edges')
+    agent_game = AgentSynthGame(nx_mdp, nx_dfa)
+    agent_game.create_synthesis_game()
+    print('Created synthesis game:', agent_game.name)
+    print(len(agent_game.synth.nodes), 'states,', len(agent_game.synth.edges), 'edges')
     print('Took', time.time() - start_time, 'seconds. \n')
 
     # PRISM translations
     start_time = time.time()
-    prism_model, state_ids = write_prism_model(synth_prod)
+    prism_model, state_ids = write_prism_model(agent_game.synth)
     safass_prop = '<< p1,p2 >> Pmax =? [F \"accept\"]'
     win_prop = '<< p1 >> Pmax =? [F \"accept\"]'
 
@@ -119,9 +120,10 @@ if __name__ == '__main__':
 
     # compute simplest safety advisers
     start_time = time.time()
-    safety_edges = minimal_safety_edges(synth_prod, state_ids, res_copy)
-    ssa = simplest_safety_adviser(synth_prod, safety_edges)
-    delete_unsafe_edges_ssa(synth_prod, ssa)    # alternative: delete_unsafe_edges(synth_prod, safety_edges)
+    safety_edges = minimal_safety_edges(agent_game.synth, state_ids, res_copy)
+    ssa = simplest_safety_adviser(agent_game.synth, safety_edges)
+    # incorporate own safety adviser
+    agent_game.delete_unsafe_edges_ssa(ssa)     # alternative: agent_game.delete_unsafe_edges(safety_edges)
 
     print('Computed and removed minimal set of safety assumptions.')
     ssa.print_advice()
@@ -129,7 +131,7 @@ if __name__ == '__main__':
 
     # check if there is a winning strategy now
     start_time = time.time()
-    safe_prism_model, state_ids = write_prism_model(synth_prod, '_safe')
+    safe_prism_model, state_ids = write_prism_model(agent_game.synth, '_safe')
     prism_handler.loadModelFile('../' + safe_prism_model)  # java handler is in a subfolder
     result = prism_handler.checkProperty(win_prop)
     print('Called PRISM-games to compute strategy on game with safety assumptions.')
@@ -138,4 +140,16 @@ if __name__ == '__main__':
     else:
         print('Additional fairness needed.')
     print('Took', time.time() - start_time, 'seconds. \n')
+
+    # incorporate simplest safety adviser test
+    start_time = time.time()
+    dummy_saf_adv = AdviserObject(pre_ap=['TEST'],
+                                  adv_ap=['BROKE'],
+                                  adv_type='safety')
+    dummy_saf_adv.adviser.add(('1', frozenset(['1'])))
+
+    agent_game.include_advice(dummy_saf_adv)
+    print('incorporated dummy safety advice into synth game')
+    print('Took', time.time() - start_time, 'seconds. \n')
+
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')

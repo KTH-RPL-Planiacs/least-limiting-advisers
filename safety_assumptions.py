@@ -1,13 +1,10 @@
 class AdviserObject:
-    adv_type = ''
-    pre_ap = []
-    adv_ap = []
-    adviser = set()
 
     def __init__(self, pre_ap, adv_ap, adv_type):
         self.pre_ap = pre_ap
         self.adv_ap = adv_ap
         self.adv_type = adv_type
+        self.adviser = set()
 
     def print_advice(self):
         if self.adv_type == 'safety':
@@ -48,12 +45,6 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
     return safety_edges
 
 
-# delete minimal set of unsafe edges
-def delete_unsafe_edges(synth, safety_edges):
-    for edge in safety_edges:
-        synth.remove_edge(edge[0], edge[1])
-
-
 def simplest_safety_adviser(synth, safety_edges):
     saf_adv = AdviserObject(pre_ap=synth.graph['ap'],
                             adv_ap=synth.graph['env_ap'],
@@ -68,41 +59,3 @@ def simplest_safety_adviser(synth, safety_edges):
 
     return saf_adv
 
-
-# delete edges specified by OWN simplest safety adviser, which is an overapproximation of the actual needed edges
-def delete_unsafe_edges_ssa(synth, ssa):
-    assert ssa.adv_type == 'safety' and ssa.pre_ap == synth.graph['ap'] and ssa.adv_ap == synth.graph['env_ap'], \
-        '<delete_unsafe_edges_ssa>: This method should only be called for OWN safety advisers'
-    for pre, adv in ssa.adviser:
-        for node, data in synth.nodes(data=True):
-            # check if it's a player 2 state
-            if data['player'] != 2:
-                continue
-            # check if the preceding player 1 state fulfills the precondition
-            assert len(list(synth.predecessors(node))) == 1, \
-                '<delete_unsafe_edges_ssa>: Your synthesized game has errors in the construction'
-            node_pred = list(synth.predecessors(node))[0]
-            if synth.nodes[node_pred]['ap'] != pre:
-                continue
-            # this is a state that matches the preconditions, so player2 choices will be pruned
-            to_remove = []
-            for succ in synth.successors(node):
-                guards = set(synth.edges[node, succ]['guards'])
-                for g in adv:
-                    if g in guards:
-                        guards.remove(g)
-                if len(guards) == 0:
-                    # mark edge for removal
-                    to_remove.append((node, succ))
-                else:
-                    # save remaining choices that player 2 is still assumed to be able to do
-                    synth.edges[node, succ]['guards'] = list(guards)
-
-            # remove marked edges
-            for rem_f, rem_t in to_remove:
-                synth.remove_edge(rem_f, rem_t)
-
-
-# expands game based on simplest safety advisers from other agents
-def include_ssa(synth, ssa):
-    pass
