@@ -9,6 +9,21 @@ class AdviserObject:
         self.adv_ap = adv_ap
         self.adv_type = adv_type
 
+    def print_advice(self):
+        if self.adv_type == 'safety':
+            if len(self.adviser) == 0:
+                print('No safety advice!')
+            for obs, sog in self.adviser:
+                print('If', obs, self.pre_ap, 'never do', list(sog), self.adv_ap)
+        elif self.adv_type == 'fairness':
+            if len(self.adviser) == 0:
+                print('No fairness advice!')
+            for obs, sog in self.adviser:
+                print('If', obs, self.pre_ap, 'sometimes do', list(sog), self.adv_ap)
+        else:
+            print('This Adviser is not correctly initialized! '
+                  'self.adv_type should be \"safety\" or \"fairness\", but is:', self.adv_type)
+
 
 def minimal_safety_edges(synth, state_ids, coop_reach):
     safety_edges = []
@@ -33,6 +48,12 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
     return safety_edges
 
 
+# delete minimal set of unsafe edges
+def delete_unsafe_edges(synth, safety_edges):
+    for edge in safety_edges:
+        synth.remove_edge(edge[0], edge[1])
+
+
 def simplest_safety_adviser(synth, safety_edges):
     saf_adv = AdviserObject(pre_ap=synth.graph['ap'],
                             adv_ap=synth.graph['env_ap'],
@@ -46,17 +67,6 @@ def simplest_safety_adviser(synth, safety_edges):
         saf_adv.adviser.add((synth.nodes[es_from_pred]['ap'], frozenset(synth.edges[es_from, es_to]['guards'])))
 
     return saf_adv
-
-
-# delete minimal set of unsafe edges
-def delete_unsafe_edges(synth, safety_edges):
-    for edge in safety_edges:
-        synth.remove_edge(edge[0], edge[1])
-
-
-def print_ssa(synth, ssa):
-    for obs, sog in ssa.adviser:
-        print('If', obs, ssa.pre_ap, 'never do', list(sog), ssa.adv_ap)
 
 
 # delete edges specified by OWN simplest safety adviser, which is an overapproximation of the actual needed edges

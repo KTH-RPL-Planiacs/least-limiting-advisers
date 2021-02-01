@@ -5,10 +5,10 @@ from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JNetworkError
 
 # OTHER CODE #
-from ltlf2dfa_nx import formula_to_nxgraph, formula_to_dot
+from ltlf2dfa_nx import LTLf2nxParser
 from dfa_mdp_prod import dfa_mdp_synth
 from prism_interface import write_prism_model
-from minimal_assumptions import *
+from safety_assumptions import *
 
 
 def dummy_mdp():
@@ -70,9 +70,10 @@ if __name__ == '__main__':
     nx_mdp = dummy_mdp()
 
     # DFA from LTL formula
-    # ltlf_formula = 'G(req -> F on)'
-    ltlf_formula = 'F(on) & G(broke -> ! X req)'
-    nx_dfa = formula_to_nxgraph(ltlf_formula)
+    ltlf_parser = LTLf2nxParser()
+    ltlf_parser.parse_formula('F(on) & G(broke -> ! X req)')
+    # ltlf_parser.parse_formula('F(give)')
+    nx_dfa = ltlf_parser.to_nxgraph()
 
     # synthesis game according to paper
     start_time = time.time()
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     delete_unsafe_edges_ssa(synth_prod, ssa)    # alternative: delete_unsafe_edges(synth_prod, safety_edges)
 
     print('Computed and removed minimal set of safety assumptions.')
-    print_ssa(synth_prod, ssa)
+    ssa.print_advice()
     print('Took', time.time() - start_time, 'seconds. \n')
 
     # check if there is a winning strategy now
