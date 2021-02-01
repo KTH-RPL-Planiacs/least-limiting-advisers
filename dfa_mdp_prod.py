@@ -97,17 +97,18 @@ def dfa_mdp_synth(dfa, mdp):
                     for dfa_succ in dfa.successors(dfa_from):
                         # we are gonna delete parts, deepcopy for safety
                         dfa_guards = deepcopy(dfa.edges[dfa_from, dfa_succ]['guard'])
-
                         # check if config matches at least one dfa guard
-                        for i in range(0, len(config)):
+                        for i, config_value in enumerate(config):
                             if joined_ap[i] in dfa_ap:
                                 j = dfa_ap.index(joined_ap[i])
-
+                                wrong_guards = []
                                 for guard in dfa_guards:
-                                    if guard[j] != 'X' and guard[j] != config[i]:
-                                        # if a dfa guard is not matching to the current config, remove it
-                                        dfa_guards.remove(guard)
-
+                                    if guard[j] != 'X' and guard[j] != config_value:
+                                        # if a dfa guard is not matching to the current config, mark for removal
+                                        wrong_guards.append(guard)
+                                # remove marked guards
+                                for wg in wrong_guards:
+                                    dfa_guards.remove(wg)
                         if len(dfa_guards) > 0:  # this config does match to this dfa successor
                             results[opt_guard].append((mdp_succ, dfa_succ))
 

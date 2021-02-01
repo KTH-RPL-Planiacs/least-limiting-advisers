@@ -1,6 +1,6 @@
-def write_prism_model(synth):
+def write_prism_model(synth, suffix=''):
     try:
-        file_name = 'data/%s.prism' % synth.graph['name']
+        file_name = 'data/%s.prism' % synth.graph['name'] + suffix
         prism_file = open(file_name, 'w')
         # Header
         prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n')

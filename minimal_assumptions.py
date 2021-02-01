@@ -91,3 +91,8 @@ def delete_unsafe_edges_ssa(synth, ssa):
             # remove marked edges
             for rem_f, rem_t in to_remove:
                 synth.remove_edge(rem_f, rem_t)
+
+
+# expands game based on simplest safety advisers from other agents
+def include_ssa(synth, ssa):
+    pass

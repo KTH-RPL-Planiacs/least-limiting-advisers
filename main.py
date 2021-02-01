@@ -5,7 +5,7 @@ from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JNetworkError
 
 # OTHER CODE #
-from ltlf2dfa_nx import formula_to_nxgraph
+from ltlf2dfa_nx import formula_to_nxgraph, formula_to_dot
 from dfa_mdp_prod import dfa_mdp_synth
 from prism_interface import write_prism_model
 from minimal_assumptions import *
@@ -14,29 +14,41 @@ from minimal_assumptions import *
 def dummy_mdp():
     # player 1 states
     m = nx.DiGraph()
-    m.graph['name'] = 'switch'
-    m.add_node("off", player=1, ap=["10"])
-    m.add_node("on", player=1, ap=["01"])
+    m.graph['name'] = 'broken_switch'
+    m.add_node("off", player=1, ap=["00"])
+    m.add_node("on", player=1, ap=["10"])
+    m.add_node("broke", player=1, ap=["01"])
+
     # probabilistic states
+    m.add_node("broke_repair", player=0)
     m.add_node("off_wait", player=0)
     m.add_node("off_switch", player=0)
     m.add_node("on_wait", player=0)
     m.add_node("on_switch", player=0)
+
     # player 1 edges
+    m.add_edge("broke", "broke_repair", act="repair")
     m.add_edge("off", "off_wait", act="wait")
     m.add_edge("off", "off_switch", act="switch")
     m.add_edge("on", "on_wait", act="wait")
     m.add_edge("on", "on_switch", act="switch")
+
     # probabilistic edges
+    m.add_edge("broke_repair", "off", prob=0.5)
+    m.add_edge("broke_repair", "broke", prob=0.5)
+
     m.add_edge("off_wait", "off", prob=1)
-    m.add_edge("off_switch", "on", prob=0.9)
+
+    m.add_edge("off_switch", "on", prob=0.8)
     m.add_edge("off_switch", "off", prob=0.1)
+    m.add_edge("off_switch", "broke", prob=0.1)
+
     m.add_edge("on_wait", "on", prob=1)
-    m.add_edge("on_switch", "off", prob=0.9)
-    m.add_edge("on_switch", "on", prob=0.1)
+    m.add_edge("on_switch", "off", prob=1)
+
     # graph information
     m.graph['init'] = "off"
-    m.graph['ap'] = ["OFF", "ON"]  # all uppercase required, order sensitive
+    m.graph['ap'] = ["ON", "BROKE"]  # all uppercase required, order sensitive
 
     return m
 
@@ -59,7 +71,7 @@ if __name__ == '__main__':
 
     # DFA from LTL formula
     # ltlf_formula = 'G(req -> F on)'
-    ltlf_formula = 'G(! req)'
+    ltlf_formula = 'F(on) & G(broke -> ! X req)'
     nx_dfa = formula_to_nxgraph(ltlf_formula)
 
     # synthesis game according to paper
@@ -116,8 +128,8 @@ if __name__ == '__main__':
 
     # check if there is a winning strategy now
     start_time = time.time()
-    safe_prism_model, state_ids = write_prism_model(synth_prod)
-    prism_handler.loadModelFile('../' + prism_model)  # java handler is in a subfolder
+    safe_prism_model, state_ids = write_prism_model(synth_prod, '_safe')
+    prism_handler.loadModelFile('../' + safe_prism_model)  # java handler is in a subfolder
     result = prism_handler.checkProperty(win_prop)
     print('Called PRISM-games to compute strategy on game with safety assumptions.')
     if result[0] >= 1.0:
