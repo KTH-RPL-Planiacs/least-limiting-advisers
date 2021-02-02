@@ -50,8 +50,27 @@ public class PrismHandler {
 			System.exit(1);
 		}
 	}
-	
-	public double[] checkProperty(String property) {
+
+	public boolean[] checkBoolProperty(String property) {
+        boolean resultArray[] = null;
+            try {
+                // Model check a property specified as a string
+                System.out.println("Checking property " + property);
+                Result result = prism.modelCheck(property);
+                int resultSize = result.getVector().getSize();
+                resultArray = new boolean[resultSize];
+                for (int i = 0; i < resultSize; i++) {
+                    boolean res = (boolean) result.getVector().getValue(i);
+                    resultArray[i] = res;
+                }
+            } catch (PrismException e) {
+                System.out.println("Error: " + e.getMessage());
+                System.exit(1);
+            }
+            return resultArray;
+        }
+
+	public double[] checkQuantProperty(String property) {
 		double resultArray[] = null;
 		try {
 			// Model check a property specified as a string

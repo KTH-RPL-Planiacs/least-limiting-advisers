@@ -1,21 +1,22 @@
 class AdviserObject:
 
-    def __init__(self, pre_ap, adv_ap, adv_type):
+    def __init__(self, pre_ap, adv_ap, pre_init, adv_type):
         self.pre_ap = pre_ap
         self.adv_ap = adv_ap
         self.adv_type = adv_type
-        self.adviser = set()
+        self.adviser = {}
+        self.pre_init = pre_init
 
     def print_advice(self):
         if self.adv_type == 'safety':
             if len(self.adviser) == 0:
                 print('No safety advice!')
-            for obs, sog in self.adviser:
+            for obs, sog in self.adviser.items():
                 print('If', obs, self.pre_ap, 'never do', list(sog), self.adv_ap)
         elif self.adv_type == 'fairness':
             if len(self.adviser) == 0:
                 print('No fairness advice!')
-            for obs, sog in self.adviser:
+            for obs, sog in self.adviser.items():
                 print('If', obs, self.pre_ap, 'sometimes do', list(sog), self.adv_ap)
         else:
             print('This Adviser is not correctly initialized! '
@@ -48,6 +49,7 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
 def simplest_safety_adviser(synth, safety_edges):
     saf_adv = AdviserObject(pre_ap=synth.graph['ap'],
                             adv_ap=synth.graph['env_ap'],
+                            pre_init=synth.nodes[synth.graph['init']]['ap'],
                             adv_type='safety')
 
     for edge in safety_edges:
@@ -55,7 +57,15 @@ def simplest_safety_adviser(synth, safety_edges):
         es_to = edge[1]
         assert len(list(synth.predecessors(es_from))) == 1, 'Your synthesized game has errors in the construction'
         es_from_pred = list(synth.predecessors(es_from))[0]
-        saf_adv.adviser.add((synth.nodes[es_from_pred]['ap'], frozenset(synth.edges[es_from, es_to]['guards'])))
+        obs = synth.nodes[es_from_pred]['ap']
+        sog = synth.edges[es_from, es_to]['guards']
+
+        if obs not in saf_adv.adviser.keys():
+            saf_adv.adviser[obs] = set(sog)
+        else:
+            saf_adv.adviser[obs].union(sog)
+
+        #saf_adv.adviser.add((synth.nodes[es_from_pred]['ap'], frozenset(synth.edges[es_from, es_to]['guards'])))
 
     return saf_adv
 

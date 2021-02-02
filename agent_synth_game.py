@@ -34,14 +34,30 @@ def create_guard(opt, ap):
 
 class AgentSynthGame:
 
-    def __init__(self, mdp, dfa):
+    def __init__(self, mdp, formula, name='agent'):
         self.mdp = mdp
-        self.dfa = dfa
+        self.spec = [formula]
+        self.dfa = None
         self.synth = nx.DiGraph()
-        self.name = self.mdp.graph['name'] + '_x_' + self.dfa.graph['name']
+        self.name = mdp.graph['name'] + '_' + name
+
+    def get_spec_formula(self):
+        f = ''
+
+        for s in self.spec:
+            f += '(' + s + ') & '
+
+        return f[:-3]
+
+    def create_dfa(self, parser):
+        full_spec = self.get_spec_formula()
+        print(full_spec)
+        parser.parse_formula(full_spec)
+        self.dfa = parser.to_nxgraph()
 
     def create_synthesis_game(self):
-        self.synth.graph['name'] = self.name
+        assert self.dfa, '<AgentSynthGame.create_synthesis_game> set self.dfa before calling this function!'
+
         self.synth.graph['acc'] = []  # list of accepting states
 
         # initial state
@@ -157,7 +173,7 @@ class AgentSynthGame:
         assert ssa.adv_type == 'safety' \
                and ssa.pre_ap == self.synth.graph['ap'] \
                and ssa.adv_ap == self.synth.graph['env_ap'], \
-               '<delete_unsafe_edges_ssa>: This method should only be called for OWN safety advisers'
+               '<AgentSynthGame.delete_unsafe_edges_ssa>: This method should only be called for OWN safety advisers'
 
         for pre, adv in ssa.adviser:
             for node, data in self.synth.nodes(data=True):
@@ -166,7 +182,7 @@ class AgentSynthGame:
                     continue
                 # check if the preceding player 1 state fulfills the precondition
                 assert len(list(self.synth.predecessors(node))) == 1, \
-                    '<delete_unsafe_edges_ssa>: Your synthesized game has errors in the construction'
+                    '<AgentSynthGame.delete_unsafe_edges_ssa>: Your synthesized game has errors in the construction'
                 node_pred = list(self.synth.predecessors(node))[0]
                 if self.synth.nodes[node_pred]['ap'] != pre:
                     continue
@@ -188,7 +204,27 @@ class AgentSynthGame:
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
 
-    # expands game based on simplest safety advisers from other agents
-    def include_advice(self, adviser_obj):
-        for pre, adv in adviser_obj.adviser:
-            print(pre, adv)
+
+    def adviser_to_spec(self, adviser):
+        if adviser.adv_type != 'safety':
+            print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
+            return
+
+        for pre, adv in adviser.adviser.items():
+            pre_f = ''
+            for index,value in enumerate(pre):
+                if value == '1':
+                    pre_f += adviser.pre_ap[index].lower() + ' & '
+                else:
+                    pre_f += '!' + adviser.pre_ap[index].lower() + ' & '
+
+            adv_f = ''
+            for index, value in enumerate(adv):
+                if value == '1':
+                    adv_f += adviser.adv_ap[index].lower() + ' & '
+                else:
+                    adv_f += '!' + adviser.adv_ap[index].lower() + ' & '
+
+            spec = 'G( ' + pre_f[0:-3] + ' -> X !' + adv_f[0:-3] + ')'
+            self.spec.append(spec)
+

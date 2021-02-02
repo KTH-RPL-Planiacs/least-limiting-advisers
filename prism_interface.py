@@ -1,6 +1,6 @@
-def write_prism_model(synth, suffix=''):
+def write_prism_model(synth, name=''):
     try:
-        file_name = 'data/%s.prism' % synth.graph['name'] + suffix
+        file_name = 'data/%s.prism' % name
         prism_file = open(file_name, 'w')
         # Header
         prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n')
@@ -17,7 +17,7 @@ def write_prism_model(synth, suffix=''):
         prism_file.write('endplayer \n')
         prism_file.write('\n')
         # module
-        prism_file.write('module %s \n' % synth.graph['name'])
+        prism_file.write('module %s \n' % name)
         # number of states excludes probabilistic extra states
         num_states = sum(n[1]['player'] != 0 for n in synth.nodes(data=True)) - 1
         prism_file.write('  x : [0..%i] init 0;\n' % num_states)
