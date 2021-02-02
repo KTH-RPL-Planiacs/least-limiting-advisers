@@ -204,7 +204,6 @@ class AgentSynthGame:
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
 
-
     def adviser_to_spec(self, adviser):
         if adviser.adv_type != 'safety':
             print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
