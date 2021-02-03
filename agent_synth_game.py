@@ -51,7 +51,6 @@ class AgentSynthGame:
 
     def create_dfa(self, parser):
         full_spec = self.get_spec_formula()
-        print(full_spec)
         parser.parse_formula(full_spec)
         self.dfa = parser.to_nxgraph()
 
@@ -175,7 +174,7 @@ class AgentSynthGame:
                and ssa.adv_ap == self.synth.graph['env_ap'], \
                '<AgentSynthGame.delete_unsafe_edges_ssa>: This method should only be called for OWN safety advisers'
 
-        for pre, adv in ssa.adviser:
+        for pre, adv in ssa.adviser.items():
             for node, data in self.synth.nodes(data=True):
                 # check if it's a player 2 state
                 if data['player'] != 2:
@@ -211,19 +210,23 @@ class AgentSynthGame:
 
         for pre, adv in adviser.adviser.items():
             pre_f = ''
-            for index,value in enumerate(pre):
+            for index, value in enumerate(pre):
                 if value == '1':
                     pre_f += adviser.pre_ap[index].lower() + ' & '
-                else:
+                elif value == '0':
                     pre_f += '!' + adviser.pre_ap[index].lower() + ' & '
+                else:
+                    assert value == 'X'
 
             adv_f = ''
             for index, value in enumerate(adv):
                 if value == '1':
                     adv_f += adviser.adv_ap[index].lower() + ' & '
-                else:
+                elif value == '0':
                     adv_f += '!' + adviser.adv_ap[index].lower() + ' & '
+                else:
+                    assert value == 'X'
 
-            spec = 'G( ' + pre_f[0:-3] + ' -> X !' + adv_f[0:-3] + ')'
+            spec = 'G(' + pre_f[0:-3] + ' -> X !' + adv_f[0:-3] + ')'
             self.spec.append(spec)
 

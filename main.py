@@ -44,25 +44,32 @@ if __name__ == '__main__':
     safass_prop = '<< p1,p2 >> P>=1 [F \"accept\"]'
     win_prop = '<< p1 >> P>=1 [F \"accept\"]'
 
-    for i in range(1):
+    for i in range(2):
         start_time = time.time()
 
         agent1.create_dfa(ltlf_parser)
         agent2.create_dfa(ltlf_parser)
 
+        if i == 1:
+            f = agent1.get_spec_formula()
+            ltlf_parser.parse_formula(f)
+            print(ltlf_parser.to_dot())
+
         agent1.create_synthesis_game()
         agent2.create_synthesis_game()
+
+        if i == 1:
+            print(agent1.synth.graph)
+
         print('Created synthesis games.')
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
         print('Took', time.time() - start_time, 'seconds. \n')
 
         # PRISM translations
-        start_time = time.time()
         prism_model1, state_ids1 = write_prism_model(agent1.synth, agent1.name)
         prism_model2, state_ids2 = write_prism_model(agent2.synth, agent2.name)
         print('Wrote synthesis game to PRISM model file.')
-        print('Took', time.time() - start_time, 'seconds. \n')
 
         # call PRISM-games to see if there exists a strategy
         start_time = time.time()
@@ -94,13 +101,12 @@ if __name__ == '__main__':
 
         prism_handler.loadModelFile('../' + prism_model1)
         result2 = prism_handler.checkBoolProperty(safass_prop)
-        result2 = pythonify(result1)
+        result2 = pythonify(result2)
 
         print('Called PRISM-games to compute cooperative reachability objective.')
         print('Took', time.time() - start_time, 'seconds. \n')
 
         # compute simplest safety advisers
-        start_time = time.time()
         safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
         ssa1 = simplest_safety_adviser(agent1.synth, safety_edges1)
         agent1.delete_unsafe_edges_ssa(ssa1)     # alternative: agent_game.delete_unsafe_edges(safety_edges)
@@ -116,23 +122,29 @@ if __name__ == '__main__':
         print('')
 
         print('Computed and removed minimal set of safety assumptions.')
-        print('Took', time.time() - start_time, 'seconds. \n')
 
         # check if there is a winning strategy now
-        start_time = time.time()
-        safe_prism_model1, save_state_ids1 = write_prism_model(agent1.synth, agent1.name + '_safe')
-        prism_handler.loadModelFile('../' + safe_prism_model1)  # java handler is in a subfolder
-        result1 = prism_handler.checkBoolProperty(win_prop)
-        result1 = pythonify(result1)
+        # start_time = time.time()
+        # safe_prism_model1, save_state_ids1 = write_prism_model(agent1.synth, agent1.name + '_safe')
+        # prism_handler.loadModelFile('../' + safe_prism_model1)  # java handler is in a subfolder
+        # result1 = prism_handler.checkBoolProperty(win_prop)
+        # result1 = pythonify(result1)
+        #
+        # safe_prism_model2, save_state_ids2 = write_prism_model(agent2.synth, agent2.name + '_safe')
+        # prism_handler.loadModelFile('../' + safe_prism_model1)  # java handler is in a subfolder
+        # result2 = prism_handler.checkBoolProperty(win_prop)
+        # result2 = pythonify(result2)
+        #
+        # print('Called PRISM-games to compute strategy on game with safety assumptions.')
+        # print('Agent1:', result1[0], ', Agent2:', result2[0])
+        # print('Took', time.time() - start_time, 'seconds. \n')
 
-        safe_prism_model2, save_state_ids2 = write_prism_model(agent2.synth, agent2.name + '_safe')
-        prism_handler.loadModelFile('../' + safe_prism_model1)  # java handler is in a subfolder
-        result2 = prism_handler.checkBoolProperty(win_prop)
-        result2 = pythonify(result2)
+        # incorporate simplest safety adviser
+        agent1.adviser_to_spec(ssa2)
+        agent2.adviser_to_spec(ssa1)
 
-        print('Called PRISM-games to compute strategy on game with safety assumptions.')
-        print('Agent1:', result1[0], ', Agent2:', result2[0])
-        print('Took', time.time() - start_time, 'seconds. \n')
+        print('Added safety adviser to spec.')
+
 
     """
     # incorporate simplest safety adviser test

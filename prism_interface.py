@@ -1,3 +1,6 @@
+import sys
+
+
 def write_prism_model(synth, name=''):
     try:
         file_name = 'data/%s.prism' % name
@@ -67,14 +70,14 @@ def write_prism_model(synth, name=''):
         prism_file.write('endmodule \n')
         prism_file.write('\n')
 
-        if len(synth.graph['acc']) > 0:
+        assert len(synth.graph['acc']) > 0, '<write_prism_model> There are no accepting states!'
 
-            reach_cond = '('
-            for acc_state in synth.graph['acc']:
-                acc_id = state_ids[acc_state]
-                reach_cond += 'x=%i | ' % acc_id
-            reach_cond = reach_cond[:-3] + ')'
-            prism_file.write('label "accept" = %s ;\n' % reach_cond)
+        reach_cond = '('
+        for acc_state in synth.graph['acc']:
+            acc_id = state_ids[acc_state]
+            reach_cond += 'x=%i | ' % acc_id
+        reach_cond = reach_cond[:-3] + ')'
+        prism_file.write('label "accept" = %s ;\n' % reach_cond)
 
         prism_file.close()
 
@@ -83,3 +86,4 @@ def write_prism_model(synth, name=''):
     except Exception as err:
         print('<write_prism_model>: an error occurred, no model file was written!')
         print(err)
+        sys.exit(0)

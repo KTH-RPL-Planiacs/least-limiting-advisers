@@ -60,12 +60,44 @@ def simplest_safety_adviser(synth, safety_edges):
         obs = synth.nodes[es_from_pred]['ap']
         sog = synth.edges[es_from, es_to]['guards']
 
-        if obs not in saf_adv.adviser.keys():
-            saf_adv.adviser[obs] = set(sog)
-        else:
-            saf_adv.adviser[obs].union(sog)
+        # minimize obs -> for each ap, check if a state with that ap flipped, but others same exists.
+        reduced_obs = obs
+        for i, o in enumerate(obs):
+            # construct hypothetical obs
+            test_obs = list(obs)
+            if o == '1':
+                test_obs[i] = '0'
+            elif o == '0':
+                test_obs[i] = '1'
+            test_obs = ''.join(test_obs)
+            # check if that observation exists
+            can_be_reduced = True
+            for node, data in synth.nodes(data=True):
+                if 'ap' not in data.keys():
+                    continue                # this is not a player 1 state
+                existing_obs = data['ap']
 
-        #saf_adv.adviser.add((synth.nodes[es_from_pred]['ap'], frozenset(synth.edges[es_from, es_to]['guards'])))
+                # compare the two
+                match = True
+                for j in range(len(test_obs)):
+                    if test_obs[j] == 'X':
+                        continue
+                    if test_obs[j] != existing_obs[j]:
+                        match = False
+
+                if match:       # this hypothetical other obs exists, so we cannot reduce it.
+                    can_be_reduced = False
+
+            if can_be_reduced: # we can reduce!
+                reduced_obs = list(reduced_obs)
+                reduced_obs[i] = 'X'
+                reduced_obs = ''.join(reduced_obs)
+
+        # add the reduced obs,sog to the adviser
+        if reduced_obs not in saf_adv.adviser.keys():
+            saf_adv.adviser[reduced_obs] = set(sog)
+        else:
+            saf_adv.adviser[reduced_obs].union(sog)
 
     return saf_adv
 
