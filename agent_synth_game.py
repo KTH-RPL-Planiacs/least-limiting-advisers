@@ -2,6 +2,7 @@ import networkx as nx
 import queue
 from itertools import chain, combinations
 from copy import deepcopy
+import sys
 
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
@@ -32,6 +33,27 @@ def create_guard(opt, ap):
     return guard
 
 
+def sog_fits_to_guard(guard, sog, guard_ap, sog_ap):
+    guards = deepcopy(sog)
+
+    # check if this guard fits to one of the guards
+    for i, g_value in enumerate(guard):
+        if g_value == 'X':
+            continue
+        if guard_ap[i] in sog_ap:
+            j = sog_ap.index(guard_ap[i])
+            wrong_guards = []
+            for guard in guards:
+                if guard[j] != 'X' and guard[j] != g_value:
+                    # if a synth guard is not matching to the current config, mark for removal
+                    wrong_guards.append(guard)
+            # remove marked guards
+            for wg in wrong_guards:
+                guards.remove(wg)
+
+    return guards
+
+
 class AgentSynthGame:
 
     def __init__(self, mdp, formula, name='agent'):
@@ -40,6 +62,8 @@ class AgentSynthGame:
         self.dfa = None
         self.synth = nx.DiGraph()
         self.name = mdp.graph['name'] + '_' + name
+        self.own_advisers = []
+        self.other_advisers = []
 
     def get_spec_formula(self):
         f = ''
@@ -57,6 +81,7 @@ class AgentSynthGame:
     def create_synthesis_game(self):
         assert self.dfa, '<AgentSynthGame.create_synthesis_game> set self.dfa before calling this function!'
 
+        self.synth = nx.DiGraph()
         self.synth.graph['acc'] = []  # list of accepting states
 
         # initial state
@@ -169,10 +194,9 @@ class AgentSynthGame:
 
     # delete edges specified by OWN simplest safety adviser, which is an overapproximation of the actual needed edges
     def delete_unsafe_edges_ssa(self, ssa):
-        assert ssa.adv_type == 'safety' \
-               and ssa.pre_ap == self.synth.graph['ap'] \
-               and ssa.adv_ap == self.synth.graph['env_ap'], \
-               '<AgentSynthGame.delete_unsafe_edges_ssa>: This method should only be called for OWN safety advisers'
+        assert ssa.adv_type == 'safety'
+        assert ssa.pre_ap == self.synth.graph['ap']
+        assert set(ssa.adv_ap).issubset(set(self.synth.graph['env_ap']))
 
         for pre, adv in ssa.adviser.items():
             for node, data in self.synth.nodes(data=True):
@@ -183,15 +207,19 @@ class AgentSynthGame:
                 assert len(list(self.synth.predecessors(node))) == 1, \
                     '<AgentSynthGame.delete_unsafe_edges_ssa>: Your synthesized game has errors in the construction'
                 node_pred = list(self.synth.predecessors(node))[0]
-                if self.synth.nodes[node_pred]['ap'] != pre:
+
+                if not sog_fits_to_guard(self.synth.nodes[node_pred]['ap'], [pre], self.synth.graph['ap'], ssa.pre_ap):
                     continue
+
                 # this is a state that matches the preconditions, so player2 choices will be pruned
                 to_remove = []
                 for succ in self.synth.successors(node):
-                    guards = set(self.synth.edges[node, succ]['guards'])
+                    guards = deepcopy(self.synth.edges[node, succ]['guards'])
                     for g in adv:
-                        if g in guards:
-                            guards.remove(g)
+                        matched_guards = sog_fits_to_guard(g, guards, ssa.adv_ap, self.synth.graph['env_ap'])
+                        for mg in matched_guards:
+                            guards.remove(mg)
+                        #    if g in guards: guards.remove(g)
                     if len(guards) == 0:
                         # mark edge for removal
                         to_remove.append((node, succ))
@@ -202,6 +230,22 @@ class AgentSynthGame:
                 # remove marked edges
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
+
+    def prune_game(self):
+        # prune by own safety advisers
+        for adviser in self.own_advisers:
+            self.delete_unsafe_edges_ssa(adviser)
+
+        # prune unreachable nodes
+        reach = nx.single_source_shortest_path_length(self.synth, self.synth.graph['init'])
+
+        unreachable_nodes = []
+        for node in self.synth.nodes:
+            if node not in reach.keys():
+                unreachable_nodes.append(node)
+
+        for urn in unreachable_nodes:
+            self.synth.remove_node(urn)
 
     def adviser_to_spec(self, adviser):
         if adviser.adv_type != 'safety':

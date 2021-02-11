@@ -50,7 +50,7 @@ def robot1_2x3_mdp():
     # graph information
     m.graph['name'] = 'robot1'
     m.graph['init'] = '00'
-    m.graph['ap'] = ["CRITA", "FLOORA", "GOALA"]  # all uppercase required, order sensitive
+    m.graph['ap'] = ["CRITA", "CORRA", "GOALA"]  # all uppercase required, order sensitive
 
     # player 1 states
     m.add_node('00', player=1, ap=['000'])
@@ -141,7 +141,7 @@ def robot2_2x3_mdp():
 
     # graph information
     m.graph['init'] = '12'
-    m.graph['ap'] = ["CRITB", "FLOORB", "GOALB"]  # all uppercase required, order sensitive
+    m.graph['ap'] = ["CRITB", "CORRB", "GOALB"]  # all uppercase required, order sensitive
     m.graph['name'] = 'robot2'
 
     # player 1 states

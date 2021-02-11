@@ -24,14 +24,15 @@ class AdviserObject:
 
 
 def minimal_safety_edges(synth, state_ids, coop_reach):
-    safety_edges = []
-
     # create list of all doomed states that can never reach the accepting states
     doomed_states = []
     for state, state_id in state_ids.items():
-        if coop_reach[state_id] < 1:
+        if not coop_reach[state_id]:
             doomed_states.append(state)
 
+    print('doom', len(doomed_states))
+
+    safety_edges = []
     # search for all player 2 edges that could lead to a doomed state from a safe state
     for node, data in synth.nodes(data=True):
         if data['player'] != 2:
@@ -43,6 +44,7 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
             if unsafe:
                 safety_edges.append((node, succ))
 
+    print('edges', safety_edges)
     return safety_edges
 
 
