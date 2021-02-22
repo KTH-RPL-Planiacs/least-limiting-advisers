@@ -57,6 +57,7 @@ class LTLf2nxParser:
         g = nx.drawing.nx_agraph.from_agraph(pygraphviz.AGraph(dot))
         # enforce directed graph (instead of MultiDiGraph)
         g = nx.DiGraph(g)
+        g.graph.clear()
         g.graph['name'] = name
 
         # re-label all shape doublecircle nodes as accepting nodes
