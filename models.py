@@ -80,6 +80,7 @@ def robot1_2x3_mdp():
     m.add_node('12l', player=0)
     m.add_node('critd', player=0)
     m.add_node('critu', player=0)
+    m.add_node('crits', player=0)
 
     # player 1 edges
     m.add_edge('00', '00s', act='stay')
@@ -104,6 +105,7 @@ def robot1_2x3_mdp():
     m.add_edge('12', '12s', act='stay')
     m.add_edge('12', '12l', act='left')
 
+    m.add_edge('crit', 'crits', act='stay')
     m.add_edge('crit', 'critu', act='up')
     m.add_edge('crit', 'critd', act='down')
 
@@ -130,6 +132,7 @@ def robot1_2x3_mdp():
     m.add_edge('12s', '12', prob=1.0)
     m.add_edge('12l', '11', prob=1.0)
 
+    m.add_edge('crits', 'crit', prob=1.0)
     m.add_edge('critu', '01', prob=1.0)
     m.add_edge('critd', '11', prob=1.0)
 
