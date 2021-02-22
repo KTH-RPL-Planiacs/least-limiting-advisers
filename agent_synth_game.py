@@ -142,21 +142,10 @@ class AgentSynthGame:
                         config = mdp_obs + opt_guard
 
                         for dfa_succ in self.dfa.successors(dfa_from):
-                            # we are gonna delete parts, deepcopy for safety
-                            dfa_guards = deepcopy(self.dfa.edges[dfa_from, dfa_succ]['guard'])
                             # check if config matches at least one dfa guard
-                            for i, config_value in enumerate(config):
-                                if joined_ap[i] in dfa_ap:
-                                    j = dfa_ap.index(joined_ap[i])
-                                    wrong_guards = []
-                                    for guard in dfa_guards:
-                                        if guard[j] != 'X' and guard[j] != config_value:
-                                            # if a dfa guard is not matching to the current config, mark for removal
-                                            wrong_guards.append(guard)
-                                    # remove marked guards
-                                    for wg in wrong_guards:
-                                        dfa_guards.remove(wg)
-                            if len(dfa_guards) > 0:  # this config does match to this dfa successor
+                            matched_guards = sog_fits_to_guard(config, self.dfa.edges[dfa_from, dfa_succ]['guard'],
+                                                               joined_ap, dfa_ap)
+                            if len(matched_guards) > 0:  # this config matches to this dfa successor
                                 results[opt_guard].append((mdp_succ, dfa_succ))
 
                 # flip and group the results to see which options lead to the same results
@@ -219,7 +208,6 @@ class AgentSynthGame:
                         matched_guards = sog_fits_to_guard(g, guards, ssa.adv_ap, self.synth.graph['env_ap'])
                         for mg in matched_guards:
                             guards.remove(mg)
-                        #    if g in guards: guards.remove(g)
                     if len(guards) == 0:
                         # mark edge for removal
                         to_remove.append((node, succ))
