@@ -9,7 +9,7 @@ player p2
 endplayer
 
 module fair_test
-    x : [0..3] init 0;
+    x : [0..4] init 0;
     [p1] x=0 -> (x'=1);
     [p2] x=1 -> (x'=2);
     [p1] x=2 -> (x'=3);

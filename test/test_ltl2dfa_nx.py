@@ -1,5 +1,5 @@
 import unittest
-import networkx as nx
+import networkx.classes.digraph
 from ltlf2dfa_nx import LTLf2nxParser
 
 
@@ -41,7 +41,7 @@ class TestLTL2dfaNx(unittest.TestCase):
         test_formula = 'G a'
         self.ltlf_parser.parse_formula(test_formula)
         result = self.ltlf_parser.to_nxgraph()
-        assert str(type(result)) == '<class \'networkx.classes.digraph.DiGraph\'>'
+        assert type(result) == networkx.classes.digraph.DiGraph
         assert len(result.nodes) == 3
         assert len(result.edges) == 5
 
