@@ -76,7 +76,7 @@ if __name__ == '__main__':
         # call PRISM-games to see if there exists a strategy
         start_time = time.time()
 
-        prism_handler.loadModelFile('../'+prism_model1)   # java handler is in a subfolder
+        prism_handler.loadModelFile('../' + prism_model1)   # java handler is in a subfolder
         result1 = prism_handler.checkBoolProperty(win_prop)
         result1 = pythonify(result1)
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         if result1[0] and result2[0]:  # initial state always has id 0
             print('No adviser computation necessary, winning strategy already exists!')
             print('Took', time.time() - start_time, 'seconds.\n')
-            sys.exit()
+            break
         else:
             print('Agent1:', result1[0], ', Agent2:', result2[0])
             print('Winning strategy does not exist, will compute minimal safety assumptions.')
@@ -121,9 +121,8 @@ if __name__ == '__main__':
         ssa2.print_advice()
         print('')
 
-        print(safety_edges1, safety_edges2)
-
         print('Computed minimal set of safety assumptions.')
+        print(agent2.synth.graph['ap'], agent2.synth.graph['env_ap'])
 
         # save advisers
         agent1.own_advisers.append(ssa1)
@@ -137,22 +136,5 @@ if __name__ == '__main__':
         agent2.adviser_to_spec(ssa1)
 
         print('Added safety adviser to spec.')
-
-
-    """
-    # incorporate simplest safety adviser test
-    start_time = time.time()
-    dummy_saf_adv = AdviserObject(pre_ap=['TEST'],
-                                  adv_ap=['BROKE'],
-                                  pre_init='0',
-                                  adv_type='safety')
-    dummy_saf_adv.adviser['1'] = ['1']
-
-    agent.adviser_to_spec(dummy_saf_adv)
-    agent.create_dfa(ltlf_parser)
-    agent.create_synthesis_game()
-    print('Incorporated dummy safety advice into synth game')
-    print('Took', time.time() - start_time, 'seconds. \n')
-    """
 
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')

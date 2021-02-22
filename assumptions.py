@@ -44,7 +44,6 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
             if unsafe:
                 safety_edges.append((node, succ))
 
-    print('edges', safety_edges)
     return safety_edges
 
 
