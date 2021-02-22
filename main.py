@@ -93,7 +93,7 @@ if __name__ == '__main__':
         prism_handler.load_model_file('../' + prism_model1)
         result1 = prism_handler.check_bool_property(safass_prop)
 
-        prism_handler.load_model_file('../' + prism_model1)
+        prism_handler.load_model_file('../' + prism_model2)
         result2 = prism_handler.check_bool_property(safass_prop)
 
         print('Called PRISM-games to compute cooperative reachability objective.')
@@ -102,28 +102,22 @@ if __name__ == '__main__':
         # compute simplest safety advisers
         safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
         ssa1 = simplest_safety_adviser(agent1.synth, safety_edges1)
-        print('Agent 1:')
-        ssa1.print_advice()
-        print('')
 
         safety_edges2 = minimal_safety_edges(agent2.synth, state_ids2, result2)
         ssa2 = simplest_safety_adviser(agent2.synth, safety_edges2)
-        print('Agent 2:')
-        ssa2.print_advice()
-        print('')
 
         print('Computed minimal set of safety assumptions.')
 
         # save advisers
-        agent1.own_advisers.append(ssa1)
-        agent2.own_advisers.append(ssa2)
+        if len(ssa1.adviser) > 0:
+            agent1.own_advisers.append(ssa1)
+            agent2.other_advisers.append(ssa1)
+            agent2.adviser_to_spec(ssa1)
 
-        agent1.other_advisers.append(ssa2)
-        agent2.other_advisers.append(ssa1)
-
-        # incorporate simplest safety adviser to specification
-        agent1.adviser_to_spec(ssa2)
-        agent2.adviser_to_spec(ssa1)
+        if len(ssa2.adviser) > 0:
+            agent2.own_advisers.append(ssa2)
+            agent1.other_advisers.append(ssa2)
+            agent1.adviser_to_spec(ssa2)
 
         print('Added safety adviser to spec.')
 
@@ -133,4 +127,15 @@ if __name__ == '__main__':
 
     print('Safety converged after %i rounds.' % rounds)
     print(' ')
+
+    print('Final Safety Advisers for Agent 1:')
+    for adviser in agent1.own_advisers:
+        adviser.print_advice()
+    print(' ')
+
+    print('Final Safety Advisers for Agent 2:')
+    for adviser in agent2.own_advisers:
+        adviser.print_advice()
+    print(' ')
+
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')
