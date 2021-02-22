@@ -1,6 +1,5 @@
 # everything in folder
 data/*
-examples/*
 .vscode/*
 
 # all java .class files

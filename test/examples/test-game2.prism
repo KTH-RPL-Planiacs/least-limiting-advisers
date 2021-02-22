@@ -1,0 +1,21 @@
+smg
+
+player p1
+    [p1]
+endplayer
+
+player p2
+    [p2]
+endplayer
+
+module fair_test
+    x : [0..3] init 0;
+    [p1] x=0 -> (x'=1);
+    [p2] x=1 -> (x'=2);
+    [p1] x=2 -> (x'=3);
+    [p2] x=3 -> (x'=0);
+    [p2] x=3 -> (x'=4);
+    [p1] x=4 -> (x'=3);
+endmodule
+
+label "a" = x=2;

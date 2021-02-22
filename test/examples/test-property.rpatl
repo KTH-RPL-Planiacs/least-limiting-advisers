@@ -1,0 +1,3 @@
+//filter(printall, <<p1>>P>=1 [ F !"a" ] & <<p1>>P>=1 [ G (<<p1>>P>=1 [ G (<<p1>>P>=1 [ F "p" ])] => <<p1>>P>=1 [ F ("p" & <<p1>>P>=1 [X "a"] )])])
+//filter(printall, <<p1>>P>=1 [ F !"a" ] & <<p1>>P>=1 [G "a"])
+filter(printall, <<p1>>P>=1 [ G (<<p1>>P>=1 [ F "a"])])
