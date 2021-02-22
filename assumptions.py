@@ -30,8 +30,6 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
         if not coop_reach[state_id]:
             doomed_states.append(state)
 
-    print('doom', len(doomed_states))
-
     safety_edges = []
     # search for all player 2 edges that could lead to a doomed state from a safe state
     for node, data in synth.nodes(data=True):

@@ -2,7 +2,6 @@ import networkx as nx
 import queue
 from itertools import chain, combinations
 from copy import deepcopy
-import sys
 
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
