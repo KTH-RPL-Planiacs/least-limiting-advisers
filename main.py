@@ -35,10 +35,14 @@ if __name__ == '__main__':
     safass_prop = '<< p1,p2 >> P>=1 [F \"accept\"]'
     win_prop = '<< p1 >> P>=1 [F \"accept\"]'
 
-    for i in range(2):
+    safety_changed = True
+    rounds = 0
+    while safety_changed:
+        print('')
         print('########################')
-        print('Starting safety computations round %i...' % (i+1))
+        print('Starting safety computations round %i...' % (rounds+1))
         print('########################')
+        print('')
         start_time = time.time()
 
         agent1.create_dfa(ltlf_parser)
@@ -60,8 +64,8 @@ if __name__ == '__main__':
         print('Took', time.time() - start_time, 'seconds. \n')
 
         # PRISM translations
-        prism_model1, state_ids1 = write_prism_model(agent1.synth, agent1.name + '_safety_r%i' % i)
-        prism_model2, state_ids2 = write_prism_model(agent2.synth, agent2.name + '_safety_r%i' % i)
+        prism_model1, state_ids1 = write_prism_model(agent1.synth, agent1.name + '_safety_r%i' % rounds)
+        prism_model2, state_ids2 = write_prism_model(agent2.synth, agent2.name + '_safety_r%i' % rounds)
         print('Wrote synthesis game to PRISM model file.')
 
         # call PRISM-games to see if there exists a strategy
@@ -123,4 +127,10 @@ if __name__ == '__main__':
 
         print('Added safety adviser to spec.')
 
+        rounds += 1
+        if len(ssa1.adviser) == 0 and len(ssa2.adviser) == 0:
+            safety_changed = False
+
+    print('Safety converged after %i rounds.' % rounds)
+    print(' ')
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')
