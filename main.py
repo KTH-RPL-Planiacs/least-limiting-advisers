@@ -7,25 +7,17 @@ from py4j.protocol import Py4JNetworkError
 # OTHER CODE #
 from ltlf2dfa_nx import LTLf2nxParser
 from agent_synth_game import AgentSynthGame
-from prism_interface import write_prism_model
+from prismhandler.prism_handler import PrismHandler
+from prismhandler.prism_io import write_prism_model
 from assumptions import *
 from models import *
-
-
-# TODO: ugly stuff! makes a copy to separate from java gateway
-def pythonify(gateway_obj):
-    res_copy = []
-    for res in gateway_obj:
-        res_copy.append(res)
-    return res_copy
 
 
 if __name__ == '__main__':
     abs_start_time = time.time()
     # setup PRISM gateway to java API handler
     try:
-        gateway = JavaGateway()
-        prism_handler = gateway.entry_point.getPrismHandler()
+        prism_handler = PrismHandler()
         print('Successfully connected to PRISM java gateway!')
     except Py4JNetworkError as err:
         print('Py4JNetworkError:', err)
@@ -76,13 +68,11 @@ if __name__ == '__main__':
         # call PRISM-games to see if there exists a strategy
         start_time = time.time()
 
-        prism_handler.loadModelFile('../' + prism_model1)   # java handler is in a subfolder
-        result1 = prism_handler.checkBoolProperty(win_prop)
-        result1 = pythonify(result1)
+        prism_handler.load_model_file('../' + prism_model1)   # java handler is in a subfolder
+        result1 = prism_handler.check_bool_property(win_prop)
 
-        prism_handler.loadModelFile('../' + prism_model2)  # java handler is in a subfolder
-        result2 = prism_handler.checkBoolProperty(win_prop)
-        result2 = pythonify(result2)
+        prism_handler.load_model_file('../' + prism_model2)  # java handler is in a subfolder
+        result2 = prism_handler.check_bool_property(win_prop)
         print('Called PRISM-games to compute strategy.')
 
         if result1[0] and result2[0]:  # initial state always has id 0
@@ -97,13 +87,11 @@ if __name__ == '__main__':
         # SAFETY ASSUMPTIONS
         # call PRISM-games to compute cooperative safe set
         start_time = time.time()
-        prism_handler.loadModelFile('../' + prism_model1)
-        result1 = prism_handler.checkBoolProperty(safass_prop)
-        result1 = pythonify(result1)
+        prism_handler.load_model_file('../' + prism_model1)
+        result1 = prism_handler.check_bool_property(safass_prop)
 
-        prism_handler.loadModelFile('../' + prism_model1)
-        result2 = prism_handler.checkBoolProperty(safass_prop)
-        result2 = pythonify(result2)
+        prism_handler.load_model_file('../' + prism_model1)
+        result2 = prism_handler.check_bool_property(safass_prop)
 
         print('Called PRISM-games to compute cooperative reachability objective.')
         print('Took', time.time() - start_time, 'seconds. \n')
@@ -122,7 +110,6 @@ if __name__ == '__main__':
         print('')
 
         print('Computed minimal set of safety assumptions.')
-        print(agent2.synth.graph['ap'], agent2.synth.graph['env_ap'])
 
         # save advisers
         agent1.own_advisers.append(ssa1)
