@@ -1,7 +1,6 @@
 import time
 import sys
 
-from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JNetworkError
 
 # OTHER CODE #

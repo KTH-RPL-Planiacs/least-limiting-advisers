@@ -260,4 +260,3 @@ class AgentSynthGame:
 
             spec = 'G(' + pre_f[0:-3] + ' -> X !' + adv_f[0:-3] + ')'
             self.spec.append(spec)
-
