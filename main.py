@@ -8,7 +8,7 @@ from ltlf2dfa_nx import LTLf2nxParser
 from agent_synth_game import AgentSynthGame
 from prismhandler.prism_handler import PrismHandler
 from prismhandler.prism_io import write_prism_model
-from assumptions import *
+from safety_assumptions import *
 from models import *
 
 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
         print('Computed minimal set of safety assumptions.')
 
-        # save advisers
+        # save advisers if they are nonempty
         if len(ssa1.adviser) > 0:
             agent1.own_advisers.append(ssa1)
             agent2.other_advisers.append(ssa1)
