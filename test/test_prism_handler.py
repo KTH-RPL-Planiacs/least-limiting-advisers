@@ -21,14 +21,14 @@ class PrismHandlerTest(unittest.TestCase):
         self.prism_handler.load_model_file('../test/examples/test-game2.prism')
 
         result = self.prism_handler.check_bool_property(reach_prop)
-        assert len(result) == 5
-        assert result[0]
-        assert not result[4]
+        self.assertEqual(len(result), 5)
+        self.assertTrue(result[0])
+        self.assertFalse(result[4])
 
         result = self.prism_handler.check_bool_property(lasso_prop)
-        assert len(result) == 5
-        assert not result[0]
+        self.assertEqual(len(result), 5)
+        self.assertFalse(result[0])
 
         result = self.prism_handler.check_bool_property(coop_lasso_prop)
-        assert len(result) == 5
-        assert result[0]
+        self.assertEqual(len(result), 5)
+        self.assertTrue(result[0])

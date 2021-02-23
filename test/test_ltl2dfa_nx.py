@@ -11,44 +11,44 @@ class TestLTL2dfaNx(unittest.TestCase):
     def test_dot_no_formula(self):
         self.ltlf_parser.formula = None
         result = self.ltlf_parser.to_dot()
-        assert(result is None)
+        self.assertIsNone(result)
 
     def test_dot(self):
         test_formula = 'G a'
         self.ltlf_parser.parse_formula(test_formula)
         dot_string = self.ltlf_parser.to_dot()
         # format does not need to be checked, it's not implemented by me (check ltl2dfa)
-        assert type(dot_string) == str
+        self.assertEqual(type(dot_string), str)
 
     def test_mona_no_formula(self):
         self.ltlf_parser.formula = None
         result = self.ltlf_parser.to_mona_output()
-        assert (result is None)
+        self.assertIsNone(result)
 
     def test_mona(self):
         test_formula = 'G a'
         self.ltlf_parser.parse_formula(test_formula)
         result = self.ltlf_parser.to_mona_output()
         # format does not need to be checked, it's not implemented by me (check ltl2dfa)
-        assert type(result) == str
+        self.assertEqual(type(result), str)
 
     def test_nx_no_formula(self):
         self.ltlf_parser.formula = None
         result = self.ltlf_parser.to_nxgraph()
-        assert (result is None)
+        self.assertIsNone(result)
 
     def test_nx(self):
         test_formula = 'G a'
         self.ltlf_parser.parse_formula(test_formula)
         result = self.ltlf_parser.to_nxgraph()
-        assert type(result) == networkx.classes.digraph.DiGraph
-        assert len(result.nodes) == 3
-        assert len(result.edges) == 5
+        self.assertIsInstance(result, networkx.classes.digraph.DiGraph)
+        self.assertEqual(len(result.nodes), 3)
+        self.assertEqual(len(result.edges), 5)
 
-        assert 'name' in result.graph.keys()
-        assert 'acc' in result.graph.keys()
-        assert 'ap' in result.graph.keys()
+        self.assertIn('name', result.graph.keys())
+        self.assertIn('acc', result.graph.keys())
+        self.assertIn('ap', result.graph.keys())
 
         for edge in result.edges:
-            assert 'label' in result.edges[edge].keys()
-            assert 'guard' in result.edges[edge].keys()
+            self.assertIn('label', result.edges[edge].keys())
+            self.assertIn('guard', result.edges[edge].keys())
