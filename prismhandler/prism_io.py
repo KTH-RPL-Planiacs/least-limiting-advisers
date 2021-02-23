@@ -32,37 +32,40 @@ def write_prism_model(synth, name=''):
         synth_init = synth.graph['init']
         state_ids[synth_init] = 0
 
-        for synth_from, synth_to, edge_data in synth.edges(data=True):
-            # player 3 states and probabilistic transitions are encoded in player 2 transitions
+        for synth_from, synth_to in synth.edges():
+            # player 3 states and probabilistic transitions are encoded in player 1 and 2 transitions
             if synth.nodes[synth_from]['player'] == 0:
                 continue
+
+            assert synth.nodes[synth_from]['player'] in [1, 2]
             # id of the originating state
             if synth_from not in state_ids.keys():
                 state_ids[synth_from] = state_id
                 state_id += 1
             from_id = state_ids[synth_from]
 
-            if synth.nodes[synth_from]['player'] == 1:
+            # the successor is a non-probabilistic state, so create the transition
+            if synth.nodes[synth_to]['player'] != 0:
                 # id of the successor state
                 if synth_to not in state_ids.keys():
                     state_ids[synth_to] = state_id
                     state_id += 1
                 to_id = state_ids[synth_to]
                 # player 1 transition written to PRISM
-                prism_file.write('  [p1] x=%i -> (x\'=%i); \n' % (from_id, to_id))
+                prism_file.write('  [p%i] x=%i -> (x\'=%i); \n' % (synth.nodes[synth_from]['player'], from_id, to_id))
 
-            elif synth.nodes[synth_from]['player'] == 2:
-                # every player 2 choice is it's own transition
-                transition_str = '  [p2] x=%i -> ' % from_id
-                # accumulate all possible outcomes of that choice
+            # the successor is a probabilistic state, so accumulate all possible outcomes of that choice
+            else:
+                transition_str = '  [p%i] x=%i -> ' % (synth.nodes[synth_from]['player'], from_id)
                 for synth_succ in synth.successors(synth_to):
-                    # add player 1 states
+                    assert synth.nodes[synth_succ]['player'] in [1, 2]
+                    # the successor should be a player state, so get the id
                     if synth_succ not in state_ids.keys():
                         state_ids[synth_succ] = state_id
                         state_id += 1
                     succ_id = state_ids[synth_succ]
                     prob = synth.edges[synth_to, synth_succ]['prob']
-                    transition_str += '%f : (x\'=%i) + ' % (prob, succ_id)
+                    transition_str += '%f : (x\'=%i) + ' % (prob, succ_id)   # accumulate possible outcomes
                 transition_str = transition_str[:-3] + ';\n'
                 prism_file.write(transition_str)
 
