@@ -16,8 +16,13 @@ class PrismHandler:
         self.gateway = JavaGateway()
         self.prism_handler = self.gateway.entry_point.getPrismHandler()
 
-    def load_model_file(self, model_file):
-        self.prism_handler.loadModelFile(model_file)
+    def load_model_file(self, model_file, test=False):
+        if test:
+            real_path = '../test/' + model_file
+        else:
+            real_path = '../' + model_file
+
+        self.prism_handler.loadModelFile(real_path)
 
     def check_bool_property(self, property_string):
         result = self.prism_handler.checkBoolProperty(property_string)

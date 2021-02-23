@@ -72,10 +72,10 @@ if __name__ == '__main__':
         # call PRISM-games to see if there exists a strategy
         start_time = time.time()
 
-        prism_handler.load_model_file('../' + prism_model1)   # java handler is in a subfolder
+        prism_handler.load_model_file(prism_model1)
         result1 = prism_handler.check_bool_property(win_prop)
 
-        prism_handler.load_model_file('../' + prism_model2)  # java handler is in a subfolder
+        prism_handler.load_model_file(prism_model2)
         result2 = prism_handler.check_bool_property(win_prop)
         print('Called PRISM-games to compute strategy.')
 
@@ -91,10 +91,10 @@ if __name__ == '__main__':
         # SAFETY ASSUMPTIONS
         # call PRISM-games to compute cooperative safe set
         start_time = time.time()
-        prism_handler.load_model_file('../' + prism_model1)
+        prism_handler.load_model_file(prism_model1)
         result1 = prism_handler.check_bool_property(safass_prop)
 
-        prism_handler.load_model_file('../' + prism_model2)
+        prism_handler.load_model_file(prism_model2)
         result2 = prism_handler.check_bool_property(safass_prop)
 
         print('Called PRISM-games to compute cooperative reachability objective.')
@@ -141,8 +141,8 @@ if __name__ == '__main__':
 
     # FAIRNESS ASSUMPTIONS
     start_time = time.time()
-    fairness_edges1 = minimal_fairness_edges(agent1.synth, prism_handler)
-    fairness_edges2 = minimal_fairness_edges(agent2.synth, prism_handler)
+    fairness_edges1 = minimal_fairness_edges(agent1.synth, agent1.name, prism_handler)
+    fairness_edges2 = minimal_fairness_edges(agent2.synth, agent2.name, prism_handler)
     print('Computed minimal set of safety assumptions.')
     print('Took', time.time() - start_time, 'seconds.\n')
 
