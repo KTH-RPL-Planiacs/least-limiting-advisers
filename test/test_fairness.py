@@ -36,3 +36,4 @@ class TestFairness(unittest.TestCase):
 
     def test_minimal_fairness_edges(self):
         fairness_edges = minimal_fairness_edges(self.test_game, 'test', self.prism_handler, test=True)
+        self.assertEqual(len(fairness_edges), 1)

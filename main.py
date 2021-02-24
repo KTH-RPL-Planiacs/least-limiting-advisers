@@ -8,8 +8,9 @@ from ltlf2dfa_nx import LTLf2nxParser
 from agent_synth_game import AgentSynthGame
 from prismhandler.prism_handler import PrismHandler
 from prismhandler.prism_io import write_prism_model
-from safety_assumptions import minimal_safety_edges, simplest_safety_adviser
+from safety_assumptions import minimal_safety_edges
 from fairness_assumptions import minimal_fairness_edges
+from advisers import AdviserObject, simplest_adviser
 from models import *
 
 
@@ -102,10 +103,10 @@ if __name__ == '__main__':
 
         # compute simplest safety advisers
         safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
-        ssa1 = simplest_safety_adviser(agent1.synth, safety_edges1)
+        ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
 
         safety_edges2 = minimal_safety_edges(agent2.synth, state_ids2, result2)
-        ssa2 = simplest_safety_adviser(agent2.synth, safety_edges2)
+        ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
 
         print('Computed minimal set of safety assumptions.')
 
@@ -142,8 +143,14 @@ if __name__ == '__main__':
     # FAIRNESS ASSUMPTIONS
     start_time = time.time()
     fairness_edges1 = minimal_fairness_edges(agent1.synth, agent1.name, prism_handler)
+    sfa1 = simplest_adviser(agent1.synth, fairness_edges1, 'fairness')
     fairness_edges2 = minimal_fairness_edges(agent2.synth, agent2.name, prism_handler)
-    print('Computed minimal set of safety assumptions.')
+    sfa2 = simplest_adviser(agent2.synth, fairness_edges2, 'fairness')
+
+    print('Computed locally minimal set of fairness assumptions.')
     print('Took', time.time() - start_time, 'seconds.\n')
+
+    sfa1.print_advice()
+    sfa2.print_advice()
 
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')

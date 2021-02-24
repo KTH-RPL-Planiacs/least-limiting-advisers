@@ -1,4 +1,5 @@
 # everything in folder
+test/data/*
 data/*
 .vscode/*
 

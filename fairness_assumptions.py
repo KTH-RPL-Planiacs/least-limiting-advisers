@@ -1,16 +1,45 @@
-from safety_assumptions import AdviserObject
 from prismhandler.prism_io import write_prism_model
+
+import copy
+import time
 
 
 def filter_player2(edge):
-    if 'guards' in edge[2]:
-        return True
-    else:
-        return False
+    return 'guards' in edge[2]
 
 
 def construct_fair_game(synth, fairness_edges):
-    return synth
+    fairness_synth = copy.deepcopy(synth)
+    fairness_dict = {}
+    for edge in fairness_edges:
+        if edge[0] not in fairness_dict.keys():
+            fairness_dict[edge[0]] = [edge]
+        else:
+            fairness_dict[edge[0]].append(edge)
+
+    for node, data in synth.nodes(data=True):
+        # skip the nodes that don't have any fairness edges
+        if node not in fairness_dict.keys():
+            continue
+        # create a probabilistic node between player-1 and player-2 node
+        prob_node = node + ('fair',)
+        # add the probabilistic node
+        fairness_synth.add_node(prob_node, player=0)
+        # re-route incoming edges
+        for pred in synth.predecessors(node):
+            fairness_synth.remove_edge(pred, node)
+            fairness_synth.add_edge(pred, prob_node, act=synth.edges[pred, node]['act'])
+        # add edge representing the player being free to chose
+        fairness_synth.add_edge(prob_node, node, prob=(1/(1+len(fairness_dict[node]))))
+        # add edges representing player-2 being forced to be fair
+        for fair_edge in fairness_dict[node]:
+            guard_label = ' '.join(str(e) for e in fair_edge[2]['guards'])
+            promise_node = node + ('_force_', guard_label)
+            fairness_synth.add_node(promise_node, player=2)
+            fairness_synth.add_edge(prob_node, promise_node, prob=(1 / (1 + len(fairness_dict[node]))))
+            fairness_synth.add_edge(promise_node, fair_edge[1], guards=fair_edge[2]['guards'])
+
+    return fairness_synth
 
 
 def minimal_fairness_edges(synth, name, prism_handler, test=False):
@@ -25,23 +54,47 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
         return []
 
     # fairness is necessary
+
     # start by assuming all player-2 edges are necessary
     fairness_edges = list(filter(filter_player2, synth.edges(data=True)))
+    assume_fair_synth = construct_fair_game(synth, fairness_edges)
 
-    winnable = False
-    round = 0
-    while not winnable:
-        assume_fair_synth = construct_fair_game(synth, fairness_edges)
+    # PRISM translations
+    prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
+    prism_handler.load_model_file(prism_model, test=test)
+    result = prism_handler.check_bool_property(win_prop)
 
-        # PRISM translations
-        prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness_r%i' % (round+1))
-        prism_handler.load_model_file(prism_model, test=test)
-        result = prism_handler.check_bool_property(win_prop)
+    winnable = result[state_ids[assume_fair_synth.graph['init']]]
 
-        winnable = result[state_ids[synth.graph['init']]]
+    if not winnable:
+        return None     # no safety assumption will work
 
-        if not winnable:
-            round += 1
-            break               # TODO
+    # try minimizing
+
+    r = 1
+    minimal = False
+    while not minimal:
+        removable_edge = None
+        for fair_edge in fairness_edges:
+            index = fairness_edges.index(fair_edge)
+            try_fair_edges = fairness_edges[:index] + fairness_edges[(index + 1):]
+            assume_fair_synth = construct_fair_game(synth, try_fair_edges)
+
+            # PRISM translations
+            prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
+            prism_handler.load_model_file(prism_model, test=test)
+            result = prism_handler.check_bool_property(win_prop)
+
+            # check if the chosen edge is removable
+            if result[state_ids[assume_fair_synth.graph['init']]]:
+                removable_edge = fair_edge
+                break
+
+        if removable_edge is None:
+            # the set has to be minimal
+            minimal = True
+        else:
+            fairness_edges.remove(removable_edge)
+            r += 1
 
     return fairness_edges
