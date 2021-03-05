@@ -2,7 +2,7 @@ from prismhandler.prism_io import write_prism_model
 
 import copy
 import time
-
+import random
 
 def filter_player2(edge):
     return 'guards' in edge[2]
@@ -71,10 +71,29 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
 
     # try minimizing
 
-    r = 1
     minimal = False
     while not minimal:
         removable_edge = None
+
+        # greedy chopping time
+        guess = int(len(fairness_edges) / 2)
+        while guess >= 1:
+            selection = random.sample(fairness_edges, guess)
+            assume_fair_synth = construct_fair_game(synth, selection)
+
+            # PRISM translations
+            prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
+            prism_handler.load_model_file(prism_model, test=test)
+            result = prism_handler.check_bool_property(win_prop)
+
+            # check if the chosen edge is removable
+            if result[state_ids[assume_fair_synth.graph['init']]]:
+                fairness_edges = selection
+                guess = int(len(fairness_edges) / 2)
+            else:
+                guess = int(guess / 2)
+
+        # thorough search
         for fair_edge in fairness_edges:
             index = fairness_edges.index(fair_edge)
             try_fair_edges = fairness_edges[:index] + fairness_edges[(index + 1):]
@@ -95,6 +114,5 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
             minimal = True
         else:
             fairness_edges.remove(removable_edge)
-            r += 1
 
     return fairness_edges
