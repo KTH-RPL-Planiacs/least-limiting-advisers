@@ -10,7 +10,7 @@ from prismhandler.prism_handler import PrismHandler
 from prismhandler.prism_io import write_prism_model
 from safety_assumptions import minimal_safety_edges
 from fairness_assumptions import minimal_fairness_edges
-from advisers import AdviserObject, simplest_adviser
+from advisers import simplest_adviser
 from models import *
 
 
@@ -30,8 +30,8 @@ if __name__ == '__main__':
     ltlf_parser = LTLf2nxParser()
 
     # create agents
-    agent1 = AgentSynthGame(mdp=robot1_2x3_mdp(), formula='F(goala) & G!(crita && critb)')
-    agent2 = AgentSynthGame(mdp=robot2_2x3_mdp(), formula='F(goalb) & G!(crita && critb)')
+    agent1 = AgentSynthGame(mdp=corridor_mdp('A', 'end_top'), formula='F(eba) & G!(crita && critb)')
+    agent2 = AgentSynthGame(mdp=corridor_mdp('B', 'end_bot'), formula='F(ebb) & G!(crita && critb)')
 
     # PRISM goal properties
     safass_prop = '<< p1,p2 >> P>=1 [F \"accept\"]'
@@ -55,14 +55,14 @@ if __name__ == '__main__':
 
         print('Created synthesis games.')
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
-        print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
+        print('Agent2:', len(agent2.synth.nodes), 'states,', len(agent2.synth.edges), 'edges')
 
         agent1.prune_game()
         agent2.prune_game()
 
         print('Pruned synthesis games.')
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
-        print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
+        print('Agent2:', len(agent2.synth.nodes), 'states,', len(agent2.synth.edges), 'edges')
         print('Took', time.time() - start_time, 'seconds. \n')
 
         # PRISM translations
@@ -150,7 +150,9 @@ if __name__ == '__main__':
     print('Computed locally minimal set of fairness assumptions.')
     print('Took', time.time() - start_time, 'seconds.\n')
 
+    print('Fairness Advisers for Agent 1:')
     sfa1.print_advice()
+    print('Fairness Advisers for Agent 2:')
     sfa2.print_advice()
 
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')
