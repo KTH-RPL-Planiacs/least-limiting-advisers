@@ -36,12 +36,11 @@ def simplest_adviser(synth, edges, adv_type):
         es_from_pred = list(synth.predecessors(es_from))[0]
         obs = synth.nodes[es_from_pred]['ap']
         sog = synth.edges[es_from, es_to]['guards']
-
         # minimize obs -> for each ap, check if a state with that ap flipped, but others same exists.
         reduced_obs = obs
         for i, o in enumerate(obs):
             # construct hypothetical obs
-            test_obs = list(obs)
+            test_obs = list(reduced_obs)
             if o == '1':
                 test_obs[i] = '0'
             elif o == '0':
