@@ -31,7 +31,10 @@ class TestAgentSynthGame(unittest.TestCase):
         self.assertIn((1, 2, 3), result_list)
 
     def test_create_guard(self):
-        pass
+        test_ap = ['A', 'B', 'C']
+        self.assertEqual(create_guard((), test_ap), '000')
+        self.assertEqual(create_guard(('A', 'C'), test_ap), '101')
+        self.assertEqual(create_guard(('A', 'B', 'C'), test_ap), '111')
 
     def test_sog_fits_to_guard(self):
         pass
