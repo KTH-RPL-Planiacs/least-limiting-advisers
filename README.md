@@ -9,7 +9,7 @@ sudo apt install mona
 ```
 
 ### [PRISM-games](https://www.prismmodelchecker.org/games/)
-[PRISM-games](https://www.prismmodelchecker.org/games/) is used for all computations on stochastic games. Check the website for installation instructions. 
+[PRISM-games](https://www.prismmodelchecker.org/games/) is used for all computations on stochastic games. Check their [website](https://www.prismmodelchecker.org/games/installation.php) for build instructions. 
 
 ### [Py4J](https://www.py4j.org/)
 We use Py4J to create a java gateway in order to access the PRISM-games java API. Check the [PRISM-api github](https://github.com/prismmodelchecker/prism-api) for further info on how to expand the java classpath to include PRISM .class files and .jars.
@@ -17,11 +17,10 @@ We use Py4J to create a java gateway in order to access the PRISM-games java API
 pip3 install py4j
 ```
 
-### Other Python Dependencies
-networkx, ltlf2dfa, pygraphviz, py4j. 
+### Other Dependencies
 ```
 sudo apt install graphviz
-pip3 install networkx ltlf2dfa pygraphviz py4j
+pip3 install networkx ltlf2dfa pygraphviz
 ```
 
 ## Running the Code
