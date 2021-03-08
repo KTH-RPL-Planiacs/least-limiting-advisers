@@ -2,17 +2,23 @@
 
 ## Installation
 
-
-Needs [MONA](http://www.brics.dk/mona/) to convert LTLf formulae to DFA. Check the website for installation instructions or try to install with apt.
+### [MONA](http://www.brics.dk/mona/)
+We use [MONA](http://www.brics.dk/mona/) to convert LTLf formulae to DFA. Check the website for installation instructions or try to install with apt.
 ```
 sudo apt install mona
 ```
 
+### [PRISM-games](https://www.prismmodelchecker.org/games/)
+[PRISM-games](https://www.prismmodelchecker.org/games/) is used for all computations on stochastic games. Check the website for installation instructions. 
 
-Needs [PRISM-games](https://www.prismmodelchecker.org/games/) for all computations on stochastic games. Check the website for installation instructions. 
-Uses Py4J to create a java gateway. Check the [PRISM-api github](https://github.com/prismmodelchecker/prism-api) for further info on how to expand the java classpath to include PRISM .class files and .jars.
+### [Py4J](https://www.py4j.org/)
+We use Py4J to create a java gateway in order to access the PRISM-games java API. Check the [PRISM-api github](https://github.com/prismmodelchecker/prism-api) for further info on how to expand the java classpath to include PRISM .class files and .jars.
+```
+pip3 install py4j
+```
 
-python dependencies: networkx, ltlf2dfa, pygraphviz, py4j. 
+### Other Python Dependencies
+networkx, ltlf2dfa, pygraphviz, py4j. 
 ```
 sudo apt install graphviz
 pip3 install networkx ltlf2dfa pygraphviz py4j
