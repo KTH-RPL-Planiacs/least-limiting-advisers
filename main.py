@@ -84,7 +84,7 @@ if __name__ == '__main__':
         can_win2 = result2[0]
 
         if can_win1 and can_win2:  # initial state always has id 0
-            print('No adviser computation necessary, winning strategy already exists!')
+            print('No adviser computation necessary, winning strategies already exists!')
             print('Took', time.time() - start_time, 'seconds.\n')
             break
         else:
@@ -100,10 +100,7 @@ if __name__ == '__main__':
         safety_changed = False
 
         if not can_win1:
-            prism_handler.load_model_file(prism_model1)
-            result1 = prism_handler.check_bool_property(safass_prop)
-
-            safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
+            safety_edges1 = minimal_safety_edges(agent1.synth, agent1.name + '_safety_r%i' % rounds, prism_handler)
             ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
 
             if len(ssa1.adviser) > 0:
@@ -114,10 +111,7 @@ if __name__ == '__main__':
                 safety_changed = True
 
         if not can_win2:
-            prism_handler.load_model_file(prism_model2)
-            result2 = prism_handler.check_bool_property(safass_prop)
-
-            safety_edges2 = minimal_safety_edges(agent2.synth, state_ids2, result2)
+            safety_edges2 = minimal_safety_edges(agent2.synth, agent2.name + '_safety_r%i' % rounds, prism_handler)
             ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
 
             if len(ssa2.adviser) > 0:

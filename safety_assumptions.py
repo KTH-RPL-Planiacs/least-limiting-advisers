@@ -1,4 +1,14 @@
-def minimal_safety_edges(synth, state_ids, coop_reach):
+from prismhandler.prism_io import write_prism_model
+
+
+def minimal_safety_edges(synth, name, prism_handler, test=False):
+    safass_prop = '<< p1,p2 >> P>=1 [F \"accept\"]'
+
+    # PRISM translations
+    prism_model, state_ids = write_prism_model(synth, name)
+    prism_handler.load_model_file(prism_model, test=test)
+    coop_reach = prism_handler.check_bool_property(safass_prop)
+
     # create list of all doomed states that can never reach the accepting states
     doomed_states = []
     for state, state_id in state_ids.items():
@@ -18,5 +28,3 @@ def minimal_safety_edges(synth, state_ids, coop_reach):
                 safety_edges.append((node, succ))
 
     return safety_edges
-
-
