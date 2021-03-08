@@ -1,8 +1,8 @@
 from prismhandler.prism_io import write_prism_model
 
 import copy
-import time
 import random
+
 
 def filter_player2(edge):
     return 'guards' in edge[2]
@@ -73,7 +73,6 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
 
     minimal = False
     while not minimal:
-        removable_edge = None
 
         # greedy chopping time
         guess = int(len(fairness_edges) / 2)
@@ -94,6 +93,7 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
                 guess = int(guess / 2)
 
         # thorough search
+        removable_edge = None
         for fair_edge in fairness_edges:
             index = fairness_edges.index(fair_edge)
             try_fair_edges = fairness_edges[:index] + fairness_edges[(index + 1):]
