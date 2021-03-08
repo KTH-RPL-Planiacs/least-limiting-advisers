@@ -16,7 +16,19 @@ class TestAgentSynthGame(unittest.TestCase):
         self.assertEqual(flipped_dict[frozenset([1, 3, 5])], ['c'])
 
     def test_powerset(self):
-        pass
+        test_input = [1, 2, 3]
+        result_list = list(powerset(test_input))
+        self.assertEqual(len(result_list), 8)
+        for thing in result_list:
+            self.assertIsInstance(thing, tuple)
+        self.assertIn((), result_list)
+        self.assertIn((1,), result_list)
+        self.assertIn((2,), result_list)
+        self.assertIn((3,), result_list)
+        self.assertIn((1, 2), result_list)
+        self.assertIn((1, 3), result_list)
+        self.assertIn((2, 3), result_list)
+        self.assertIn((1, 2, 3), result_list)
 
     def test_create_guard(self):
         pass
