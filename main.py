@@ -30,8 +30,8 @@ if __name__ == '__main__':
     ltlf_parser = LTLf2nxParser()
 
     # create agents
-    agent1 = AgentSynthGame(mdp=corridor_mdp('A', 'end_top'), formula='F(eba) & G!(crita && critb)')
-    agent2 = AgentSynthGame(mdp=corridor_mdp('B', 'end_bot'), formula='F(ebb) & G!(crita && critb)')
+    agent1 = AgentSynthGame(mdp=corridor_mdp('A', init_state='end_top'), formula='F(eta) & G!(crita && critb)')
+    agent2 = AgentSynthGame(mdp=corridor_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')
 
     # PRISM goal properties
     safass_prop = '<< p1,p2 >> P>=1 [F \"accept\"]'
@@ -80,52 +80,58 @@ if __name__ == '__main__':
         result2 = prism_handler.check_bool_property(win_prop)
         print('Called PRISM-games to compute strategy.')
 
-        if result1[0] and result2[0]:  # initial state always has id 0
+        can_win1 = result1[0]
+        can_win2 = result2[0]
+
+        if can_win1 and can_win2:  # initial state always has id 0
             print('No adviser computation necessary, winning strategy already exists!')
             print('Took', time.time() - start_time, 'seconds.\n')
             break
         else:
-            print('Agent1:', result1[0], ', Agent2:', result2[0])
+            print('Agent1:', can_win1, ', Agent2:', can_win2)
             print('Winning strategy does not exist, will compute minimal safety assumptions.')
             print('Took', time.time() - start_time, 'seconds.\n')
 
         # SAFETY ASSUMPTIONS
         # call PRISM-games to compute cooperative safe set
+        # then, compute simplest safety advisers
+        # and save advisers if they are nonempty
         start_time = time.time()
-        prism_handler.load_model_file(prism_model1)
-        result1 = prism_handler.check_bool_property(safass_prop)
+        safety_changed = False
 
-        prism_handler.load_model_file(prism_model2)
-        result2 = prism_handler.check_bool_property(safass_prop)
+        if not can_win1:
+            prism_handler.load_model_file(prism_model1)
+            result1 = prism_handler.check_bool_property(safass_prop)
 
-        print('Called PRISM-games to compute cooperative reachability objective.')
-        print('Took', time.time() - start_time, 'seconds. \n')
+            safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
+            ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
 
-        # compute simplest safety advisers
-        safety_edges1 = minimal_safety_edges(agent1.synth, state_ids1, result1)
-        ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
+            if len(ssa1.adviser) > 0:
+                ssa1.print_advice()
+                agent1.own_advisers.append(ssa1)
+                agent2.other_advisers.append(ssa1)
+                agent2.adviser_to_spec(ssa1)
+                safety_changed = True
 
-        safety_edges2 = minimal_safety_edges(agent2.synth, state_ids2, result2)
-        ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
+        if not can_win2:
+            prism_handler.load_model_file(prism_model2)
+            result2 = prism_handler.check_bool_property(safass_prop)
 
-        print('Computed minimal set of safety assumptions.')
+            safety_edges2 = minimal_safety_edges(agent2.synth, state_ids2, result2)
+            ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
 
-        # save advisers if they are nonempty
-        if len(ssa1.adviser) > 0:
-            agent1.own_advisers.append(ssa1)
-            agent2.other_advisers.append(ssa1)
-            agent2.adviser_to_spec(ssa1)
-
-        if len(ssa2.adviser) > 0:
-            agent2.own_advisers.append(ssa2)
-            agent1.other_advisers.append(ssa2)
-            agent1.adviser_to_spec(ssa2)
-
-        print('Added safety adviser to spec.')
+            if len(ssa2.adviser) > 0:
+                ssa2.print_advice()
+                agent2.own_advisers.append(ssa2)
+                agent1.other_advisers.append(ssa2)
+                agent1.adviser_to_spec(ssa2)
+                safety_changed = True
 
         rounds += 1
-        if len(ssa1.adviser) == 0 and len(ssa2.adviser) == 0:
-            safety_changed = False
+        print('Called PRISM-games to compute cooperative reachability objective.')
+        print('Computed minimal set of safety assumptions.')
+        print('Added safety adviser to spec.')
+        print('Took', time.time() - start_time, 'seconds. \n')
 
     print('Safety converged after %i rounds.' % rounds)
     print(' ')
