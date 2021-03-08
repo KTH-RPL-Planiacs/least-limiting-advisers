@@ -128,17 +128,18 @@ if __name__ == '__main__':
         print('Took', time.time() - start_time, 'seconds. \n')
 
     print('Safety converged after %i rounds.' % rounds)
-    print(' ')
+    print('Took', time.time() - abs_start_time, 'seconds. \n')
+    print('')
 
     print('Final Safety Advisers for Agent 1:')
     for adviser in agent1.own_advisers:
         adviser.print_advice()
-    print(' ')
+    print('')
 
     print('Final Safety Advisers for Agent 2:')
     for adviser in agent2.own_advisers:
         adviser.print_advice()
-    print(' ')
+    print('')
 
     # FAIRNESS ASSUMPTIONS
     start_time = time.time()
