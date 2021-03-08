@@ -18,7 +18,7 @@ class PrismHandlerTest(unittest.TestCase):
         reach_prop = '<< p1 >> P>=1 [F \"a\"]'
         lasso_prop = '<<p1>>P>=1 [ G (<<p1>>P>=1 [ F \"a\"])]'
         coop_lasso_prop = '<<p1,p2>>P>=1 [ G (<<p1,p2>>P>=1 [ F \"a\"])]'
-        self.prism_handler.load_model_file('../test/examples/test-game2.prism')
+        self.prism_handler.load_model_file('../test/examples/test-game2.prism', test=True)
 
         result = self.prism_handler.check_bool_property(reach_prop)
         self.assertEqual(len(result), 5)
