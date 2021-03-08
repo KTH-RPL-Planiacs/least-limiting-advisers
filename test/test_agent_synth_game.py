@@ -37,4 +37,20 @@ class TestAgentSynthGame(unittest.TestCase):
         self.assertEqual(create_guard(('A', 'B', 'C'), test_ap), '111')
 
     def test_sog_fits_to_guard(self):
-        pass
+        guard_ap = ['A', 'B', 'C']
+        sog_ap = ['A', 'B', 'C']
+
+        res = sog_fits_to_guard(guard='000', sog=['000'], guard_ap=guard_ap, sog_ap=sog_ap)
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0], '000')
+
+        res = sog_fits_to_guard(guard='000', sog=['0X0'], guard_ap=guard_ap, sog_ap=sog_ap)
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0], '0X0')
+
+        res = sog_fits_to_guard(guard='000', sog=['0X1, 11X, XX1'], guard_ap=guard_ap, sog_ap=sog_ap)
+        self.assertEqual(len(res), 0)
+
+        res = sog_fits_to_guard(guard='000', sog=['0X0', '000', '1XX'], guard_ap=guard_ap, sog_ap=sog_ap)
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res, ['0X0', '000'])
