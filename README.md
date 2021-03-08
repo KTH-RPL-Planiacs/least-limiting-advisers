@@ -38,9 +38,9 @@ python3 main.py
 
 Every commit is associated with one of the following types:
 
-(feature) - added functionality to the code
-(bugfix) - fixed bugs in the code
-(test) - added or changed unittests
-(refactor) - refactored the structure of the code without changing the functionality
-(cleanup) - minor code cleanups like removing unused imports or changing some comment lines/whitespaces
-(other) - a commit that doesn't fit any category above; should rarely be used
+* (feature) - added functionality to the code
+* (bugfix) - fixed bugs in the code
+* (test) - added or changed unittests
+* (refactor) - refactored the structure of the code without changing the functionality
+* (cleanup) - minor code cleanups like removing unused imports or changing some comment lines/whitespaces
+* (other) - a commit that doesn't fit any category above; should rarely be used
