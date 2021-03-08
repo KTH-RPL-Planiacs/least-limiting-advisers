@@ -78,76 +78,83 @@ def simplest_adviser(synth, edges, adv_type):
         else:
             adv_obj.adviser[reduced_obs].union(sog)
 
-    # # reduce advice
-    # for obs, sog in adv_obj.adviser.items():
-    #     # TODO REFACTORING!
-    #     # reduce the set of guards (sog)
-    #     new_sog = sog
-    #     changed = True
-    #     while changed:
-    #         changed = False
-    #         reduced_sog = set()
-    #         for guard in new_sog:
-    #             for i, o in enumerate(guard):
-    #                 # construct hypothetical obs
-    #                 test_guard = list(guard)
-    #                 if o == '1':
-    #                     test_guard[i] = '0'
-    #                 elif o == '0':
-    #                     test_guard[i] = '1'
-    #                 test_guard = ''.join(test_guard)
-    #                 # check if this guard with a single flipped bit is also in the existing sog
-    #                 already_in_sog = False
-    #                 for g in new_sog:
-    #                     # compare test_guard with g
-    #                     match = True
-    #                     for j in range(len(test_guard)):
-    #                         if test_guard[j] == 'X':
-    #                             continue
-    #                         if test_guard[j] != g[j]:
-    #                             match = False
-    #                     if match:
-    #                         already_in_sog = True
-    #
-    #                 if not already_in_sog:
-    #                     # create reduced guard
-    #                     reduced_guard = list(guard)
-    #                     reduced_guard[i] = 'X'
-    #                     reduced_guard = ''.join(reduced_guard)
-    #
-    #                     # add reduced guard if not already represented
-    #                     exists = False
-    #                     for g in reduced_sog:
-    #                         # compare test_guard with g
-    #                         match = True
-    #                         for j in range(len(test_guard)):
-    #                             if test_guard[j] == 'X':
-    #                                 continue
-    #                             if test_guard[j] != g[j]:
-    #                                 match = False
-    #                         if match:
-    #                             exists = True
-    #
-    #                     if not exists:
-    #                         reduced_sog.add(reduced_guard)
-    #                         changed = True
-    #                 else:
-    #                     # add old guard if not already represented
-    #                     exists = False
-    #                     for g in reduced_sog:
-    #                         # compare test_guard with g
-    #                         match = True
-    #                         for j in range(len(test_guard)):
-    #                             if test_guard[j] == 'X':
-    #                                 continue
-    #                             if test_guard[j] != g[j]:
-    #                                 match = False
-    #                         if match:
-    #                             exists = True
-    #
-    #                     if not exists:
-    #                         reduced_sog.add(guard)
-    #         new_sog = reduced_sog
-    #         print(new_sog)
+    # reduce advice
+    for obs, sog in adv_obj.adviser.items():
+        print('')
+        print('REDUCING THE ADVICE', obs, sog)
+        # TODO REFACTORING!
+        # blow up the set of guards with all possible generalizations
+        new_sog = sog
+        changed = True
+        while changed:
+            blown_up_sog = set(new_sog)
+            for guard in new_sog:               # for each guard
+                for i, o in enumerate(guard):   # for each bit in the guard
+                    # construct hypothetical test_guard
+                    test_guard = list(guard)
+                    if o == '1':
+                        test_guard[i] = '0'
+                    elif o == '0':
+                        test_guard[i] = '1'
+                    else:
+                        test_guard[i] = 'X'
+                    test_guard = ''.join(test_guard)
+
+                    # check if the test_guard and the guard are different (they are not if 'X' got "flipped")
+                    if test_guard == guard:
+                        continue
+
+                    # check if this guard with a single flipped bit is also in the existing sog
+                    also_in_sog = False
+                    for g in new_sog:           # for each g in sog, compare test_guard with g
+                        match = True            # assume it is a match
+                        for j in range(len(test_guard)):
+                            if test_guard[j] == 'X' or g[j] == 'X':
+                                continue        # skip X
+                            if test_guard[j] != g[j]:
+                                match = False   # counter example, can't be a match
+                        if match:               # if it was a match, set already_in_sog to True
+                            also_in_sog = True
+
+                    # if the hypothetical guard is not also in the new sog, we cannot reduce
+                    if not also_in_sog:
+                        continue
+
+                    # create a reduced guard
+                    reduced_guard = list(guard)
+                    reduced_guard[i] = 'X'
+                    reduced_guard = ''.join(reduced_guard)
+                    # add it to the reduced sog
+                    blown_up_sog.add(reduced_guard)
+
+            if new_sog == blown_up_sog:
+                changed = False
+
+            new_sog = blown_up_sog
+
+        # sog is all blown up with all possible generalizations
+        unnecessary_guards = set()
+        for guard in new_sog:
+            for other_guard in new_sog:
+                # skip yourself
+                if guard == other_guard:
+                    continue
+
+                # check if the guard subsumes the other_guard
+                subsumes = True
+                for j in range(len(guard)):
+                    if guard[j] == 'X':
+                        continue
+                    if other_guard[j] == 'X':
+                        subsumes = False
+                    if not guard[j] == other_guard[j]:
+                        subsumes = False
+                if subsumes:
+                    unnecessary_guards.add(other_guard)
+
+        reduced_sog = new_sog.difference(unnecessary_guards)
+        print('FINAL RESULT', reduced_sog)
+        print('')
+        adv_obj.adviser[obs] = reduced_sog
 
     return adv_obj
