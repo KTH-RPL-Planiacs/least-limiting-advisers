@@ -7,6 +7,9 @@ from prismhandler.prism_io import write_prism_model
 class PrismIOTest(unittest.TestCase):
 
     def setUp(self):
+        """
+        create a mock stochastic game
+        """
         self.test_game = nx.DiGraph()
         self.test_game.graph['init'] = '1'
         self.test_game.graph['acc'] = ['1']
@@ -20,5 +23,8 @@ class PrismIOTest(unittest.TestCase):
         self.test_game.add_edge('1.5', '2', prob=1.0)
 
     def test_write_prism_model(self):
+        """
+        check if the function created a file with the correct name in the correct place
+        """
         write_prism_model(self.test_game, 'test')
         self.assertTrue(os.path.exists('data/test.prism'))

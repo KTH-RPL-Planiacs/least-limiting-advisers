@@ -10,6 +10,10 @@ from advisers import simplest_adviser
 class TestSafety(unittest.TestCase):
 
     def setUp(self):
+        """
+        Creates a mock stochastic game where player 1 can only win if edge (2,3) is never chosen.
+        Sets up the PRISM-games java API gateway.
+        """
         self.test_game = nx.DiGraph()
         self.test_game.graph['init'] = ('1',)
         self.test_game.graph['acc'] = [('5',)]
@@ -40,6 +44,9 @@ class TestSafety(unittest.TestCase):
                   'Compile and launch prismhandler/PrismEntryPoint.java!')
 
     def test_minimal_safety_edges(self):
+        """
+        check if the algorithm finds exactly the one edge that needs to be avoided in order for player 1 to win
+        """
         safety_edges = minimal_safety_edges(self.test_game, 'test', self.prism_handler, test=True)
         self.assertEqual(len(safety_edges), 1)
         edge = safety_edges[0]
@@ -47,6 +54,9 @@ class TestSafety(unittest.TestCase):
         self.assertEqual(edge[1], ('3',))
 
     def test_simplest_safety_adviser(self):
+        """
+        check if the constructed safety adviser from that edge has the correct structure
+        """
         safety_edges = minimal_safety_edges(self.test_game, 'test', self.prism_handler, test=True)
         ssa = simplest_adviser(self.test_game, safety_edges, 'safety')
         self.assertEqual(ssa.pre_ap, ['START', 'GOAL'])

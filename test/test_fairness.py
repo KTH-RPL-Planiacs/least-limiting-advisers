@@ -10,6 +10,10 @@ from advisers import simplest_adviser
 class TestFairness(unittest.TestCase):
 
     def setUp(self):
+        """
+        Creates a mock stochastic game where player 1 can only win if edge (2,4) is chosen fairly.
+        Sets up the PRISM-games java API gateway.
+        """
         self.test_game = nx.DiGraph()
         self.test_game.graph['init'] = ('1',)
         self.test_game.graph['acc'] = [('5',)]
@@ -40,6 +44,9 @@ class TestFairness(unittest.TestCase):
                   'Compile and launch prismhandler/PrismEntryPoint.java!')
 
     def test_minimal_fairness_edges(self):
+        """
+        check if the algorithm finds exactly the one edge that needs to be fair in order for player 1 to win
+        """
         fairness_edges = minimal_fairness_edges(self.test_game, 'test', self.prism_handler, test=True)
         self.assertEqual(len(fairness_edges), 1)
         edge = fairness_edges[0]
@@ -47,6 +54,9 @@ class TestFairness(unittest.TestCase):
         self.assertEqual(edge[1], ('4',))
 
     def test_simplest_fairness_adviser(self):
+        """
+        check if the constructed fairness adviser from that edge has the correct structure
+        """
         safety_edges = minimal_fairness_edges(self.test_game, 'test', self.prism_handler, test=True)
         ssa = simplest_adviser(self.test_game, safety_edges, 'fairness')
         self.assertEqual(ssa.pre_ap, ['START', 'GOAL'])
