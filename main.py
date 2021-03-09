@@ -30,7 +30,7 @@ if __name__ == '__main__':
     ltlf_parser = LTLf2nxParser()
 
     # create agents
-    agent1 = AgentSynthGame(mdp=corridor_mdp('A', init_state='end_top'), formula='F(eta) & G!(crita && critb)')
+    agent1 = AgentSynthGame(mdp=corridor_mdp('A', init_state='end_top'), formula='F(eba) & G!(crita && critb)')
     agent2 = AgentSynthGame(mdp=corridor_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')
 
     # PRISM goal properties
@@ -57,6 +57,7 @@ if __name__ == '__main__':
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
         print('Agent2:', len(agent2.synth.nodes), 'states,', len(agent2.synth.edges), 'edges')
 
+        # prune and modify the games by assuming previous own advisers to be yielded
         agent1.prune_game(additional_pruning=True)
         agent2.prune_game(additional_pruning=True)
 
@@ -140,10 +141,24 @@ if __name__ == '__main__':
 
     # FAIRNESS ASSUMPTIONS
     start_time = time.time()
+
     fairness_edges1 = minimal_fairness_edges(agent1.synth, agent1.name, prism_handler)
     sfa1 = simplest_adviser(agent1.synth, fairness_edges1, 'fairness')
+
+    if len(sfa1.adviser) > 0:
+        agent1.own_advisers.append(sfa1)
+        agent1.fairness_edges.extend(fairness_edges1)
+        agent2.other_advisers.append(sfa1)
+        # TODO:
+
     fairness_edges2 = minimal_fairness_edges(agent2.synth, agent2.name, prism_handler)
     sfa2 = simplest_adviser(agent2.synth, fairness_edges2, 'fairness')
+
+    if len(sfa2.adviser) > 0:
+        agent2.own_advisers.append(sfa2)
+        agent2.fairness_edges.extend(fairness_edges2)
+        agent1.other_advisers.append(sfa2)
+        # TODO:
 
     print('Computed locally minimal set of fairness assumptions.')
     print('Took', time.time() - start_time, 'seconds.\n')

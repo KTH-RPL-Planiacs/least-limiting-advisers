@@ -9,6 +9,9 @@ def filter_player2(edge):
 
 
 def construct_fair_game(synth, fairness_edges):
+    if len(fairness_edges) == 0:
+        return synth
+
     fairness_synth = copy.deepcopy(synth)
     fairness_dict = {}
     for edge in fairness_edges:

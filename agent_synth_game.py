@@ -2,6 +2,7 @@ import networkx as nx
 import queue
 from itertools import chain, combinations
 from copy import deepcopy
+from fairness_assumptions import construct_fair_game
 
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
@@ -63,6 +64,7 @@ class AgentSynthGame:
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
+        self.fairness_edges = []
 
     def get_spec_formula(self):
         f = ''
@@ -221,7 +223,11 @@ class AgentSynthGame:
     def prune_game(self, additional_pruning=False):
         # prune by own safety advisers
         for adviser in self.own_advisers:
-            self.delete_unsafe_edges_ssa(adviser)
+            if adviser.adv_type == 'safety':
+                self.delete_unsafe_edges_ssa(adviser)
+
+        # modify by own fairness edges
+        self.synth = construct_fair_game(self.synth, self.fairness_edges)
 
         if additional_pruning:
             # prune unreachable nodes
