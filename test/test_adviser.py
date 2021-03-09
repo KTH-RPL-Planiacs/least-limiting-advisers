@@ -7,6 +7,10 @@ class TestAdviser(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_replace_guard_bit(self):
+        # replace a literal
+        self.assertEqual(replace_guard_bit('000', 1, 'X'), '0X0')
+
     def test_flip_guard_bit(self):
         # check if a bit gets flipped
         self.assertEqual(flip_guard_bit('000', 1), '010')
