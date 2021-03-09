@@ -46,16 +46,6 @@ def replace_guard_bit(guard, bit, lit):
     return new_guard
 
 
-def match_guards(guard, other_guard):
-    match = True                # assume it is a match
-    for j in range(len(guard)):
-        if guard[j] == 'X' and other_guard[j] == 'X':
-            continue
-        if guard[j] != other_guard[j]:
-            match = False       # counter-proof, cannot be a match
-    return match
-
-
 def reduce_set_of_guards(sog):
     # blow up the set of guards with all possible generalizations
     new_sog = sog
@@ -71,15 +61,8 @@ def reduce_set_of_guards(sog):
                 if test_guard == guard:
                     continue
 
-                # check if this guard with a single flipped bit is also in the existing sog
-                also_in_sog = False
-                for g in new_sog:  # for each g in sog, compare test_guard with g
-                    if match_guards(test_guard, g):  # if it was a match, set already_in_sog to True
-                        also_in_sog = True
-                        break
-
                 # if the hypothetical guard is not also in the new sog, we cannot reduce
-                if not also_in_sog:
+                if test_guard not in new_sog:
                     continue
 
                 # create a reduced guard
@@ -146,7 +129,7 @@ def simplest_adviser(synth, edges, adv_type):
                     continue                # this is not a player 1 state
                 existing_obs = data['ap']
 
-                if match_guards(test_obs, existing_obs):    # this hypothetical other obs exists, so we cannot reduce
+                if test_obs == existing_obs:    # this hypothetical other obs exists, so we cannot reduce
                     can_be_reduced = False
 
             if can_be_reduced:  # we can reduce!
