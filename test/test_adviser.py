@@ -1,11 +1,17 @@
 import unittest
-from advisers import reduce_set_of_guards
+from advisers import reduce_set_of_guards, flip_guard_bit, replace_guard_bit
 
 
 class TestAdviser(unittest.TestCase):
 
     def setUp(self):
         pass
+
+    def test_flip_guard_bit(self):
+        # check if a bit gets flipped
+        self.assertEqual(flip_guard_bit('000', 1), '010')
+        # check if a 1 flip gets ignored if parameter is set
+        self.assertEqual(flip_guard_bit('010', 1, skip_ones=True), '010')
 
     def test_reduce_set_of_guards(self):
         # one guard should stay the same
