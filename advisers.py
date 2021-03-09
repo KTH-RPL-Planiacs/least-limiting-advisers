@@ -43,6 +43,16 @@ def replace_guard_bit(guard, bit, lit):
     return new_guard
 
 
+def match_guards(guard, other_guard):
+    match = True                # assume it is a match
+    for j in range(len(guard)):
+        if guard[j] == 'X' or other_guard[j] == 'X':
+            continue            # X always matches
+        if guard[j] != other_guard[j]:
+            match = False       # counter-proof, cannot be a match
+    return match
+
+
 def reduce_set_of_guards(sog):
     # blow up the set of guards with all possible generalizations
     new_sog = sog
@@ -61,14 +71,9 @@ def reduce_set_of_guards(sog):
                 # check if this guard with a single flipped bit is also in the existing sog
                 also_in_sog = False
                 for g in new_sog:  # for each g in sog, compare test_guard with g
-                    match = True  # assume it is a match
-                    for j in range(len(test_guard)):
-                        if test_guard[j] == 'X' or g[j] == 'X':
-                            continue  # skip X
-                        if test_guard[j] != g[j]:
-                            match = False  # counter example, can't be a match
-                    if match:  # if it was a match, set already_in_sog to True
+                    if match_guards(test_guard, g):  # if it was a match, set already_in_sog to True
                         also_in_sog = True
+                        break
 
                 # if the hypothetical guard is not also in the new sog, we cannot reduce
                 if not also_in_sog:
@@ -135,15 +140,7 @@ def simplest_adviser(synth, edges, adv_type):
                     continue                # this is not a player 1 state
                 existing_obs = data['ap']
 
-                # compare the two
-                match = True
-                for j in range(len(test_obs)):
-                    if test_obs[j] == 'X':
-                        continue
-                    if test_obs[j] != existing_obs[j]:
-                        match = False
-
-                if match:       # this hypothetical other obs exists, so we cannot reduce it.
+                if match_guards(test_obs, existing_obs):    # this hypothetical other obs exists, so we cannot reduce
                     can_be_reduced = False
 
             if can_be_reduced:  # we can reduce!
