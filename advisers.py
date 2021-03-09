@@ -36,6 +36,13 @@ def flip_guard_bit(guard, bit, skip_ones=False):
     return test_guard
 
 
+def replace_guard_bit(guard, bit, lit):
+    new_guard = list(guard)
+    new_guard[bit] = lit
+    new_guard = ''.join(new_guard)
+    return new_guard
+
+
 def reduce_set_of_guards(sog):
     # blow up the set of guards with all possible generalizations
     new_sog = sog
@@ -68,9 +75,7 @@ def reduce_set_of_guards(sog):
                     continue
 
                 # create a reduced guard
-                reduced_guard = list(guard)
-                reduced_guard[i] = 'X'
-                reduced_guard = ''.join(reduced_guard)
+                reduced_guard = replace_guard_bit(guard, i, 'X')
                 # add it to the reduced sog
                 blown_up_sog.add(reduced_guard)
 
@@ -142,9 +147,7 @@ def simplest_adviser(synth, edges, adv_type):
                     can_be_reduced = False
 
             if can_be_reduced:  # we can reduce!
-                reduced_obs = list(reduced_obs)
-                reduced_obs[i] = 'X'
-                reduced_obs = ''.join(reduced_obs)
+                reduced_obs = replace_guard_bit(reduced_obs, i, 'X')
 
         # add the reduced obs,sog to the adviser
         if reduced_obs not in adv_obj.adviser.keys():
