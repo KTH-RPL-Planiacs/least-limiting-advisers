@@ -57,8 +57,8 @@ if __name__ == '__main__':
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
         print('Agent2:', len(agent2.synth.nodes), 'states,', len(agent2.synth.edges), 'edges')
 
-        agent1.prune_game()
-        agent2.prune_game()
+        agent1.prune_game(additional_pruning=True)
+        agent2.prune_game(additional_pruning=True)
 
         print('Pruned synthesis games.')
         print('Agent1:', len(agent1.synth.nodes), 'states,', len(agent1.synth.edges), 'edges')
@@ -99,27 +99,24 @@ if __name__ == '__main__':
         start_time = time.time()
         safety_changed = False
 
-        if not can_win1:
-            safety_edges1 = minimal_safety_edges(agent1.synth, agent1.name + '_safety_r%i' % rounds, prism_handler)
-            ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
+        safety_edges1 = minimal_safety_edges(agent1.synth, agent1.name + '_safety_r%i' % rounds, prism_handler)
+        ssa1 = simplest_adviser(agent1.synth, safety_edges1, 'safety')
 
-            if len(ssa1.adviser) > 0:
-                ssa1.print_advice()
-                agent1.own_advisers.append(ssa1)
-                agent2.other_advisers.append(ssa1)
-                agent2.adviser_to_spec(ssa1)
-                safety_changed = True
+        if len(ssa1.adviser) > 0:
+            agent1.own_advisers.append(ssa1)
+            agent2.other_advisers.append(ssa1)
+            agent2.adviser_to_spec(ssa1)
+            safety_changed = True
 
-        if not can_win2:
-            safety_edges2 = minimal_safety_edges(agent2.synth, agent2.name + '_safety_r%i' % rounds, prism_handler)
-            ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
+        safety_edges2 = minimal_safety_edges(agent2.synth, agent2.name + '_safety_r%i' % rounds, prism_handler)
+        ssa2 = simplest_adviser(agent2.synth, safety_edges2, 'safety')
 
-            if len(ssa2.adviser) > 0:
-                ssa2.print_advice()
-                agent2.own_advisers.append(ssa2)
-                agent1.other_advisers.append(ssa2)
-                agent1.adviser_to_spec(ssa2)
-                safety_changed = True
+        if len(ssa2.adviser) > 0:
+            agent2.own_advisers.append(ssa2)
+            agent1.other_advisers.append(ssa2)
+            agent1.adviser_to_spec(ssa2)
+            print(agent1.get_spec_formula())
+            safety_changed = True
 
         rounds += 1
         print('Called PRISM-games to compute cooperative reachability objective.')
