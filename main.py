@@ -116,7 +116,6 @@ if __name__ == '__main__':
             agent2.own_advisers.append(ssa2)
             agent1.other_advisers.append(ssa2)
             agent1.adviser_to_spec(ssa2)
-            print(agent1.get_spec_formula())
             safety_changed = True
 
         rounds += 1
@@ -168,4 +167,6 @@ if __name__ == '__main__':
     print('Fairness Advisers for Agent 2:')
     sfa2.print_advice()
 
+    print('')
+    print('All computations done!')
     print('Took', time.time() - abs_start_time, 'seconds in total. \n')
