@@ -26,11 +26,14 @@ class AdviserObject:
 def flip_guard_bit(guard, bit, skip_ones=False):
     # construct hypothetical test_guard
     test_guard = list(guard)
-    if guard[bit] == '1' and not skip_ones:
-        test_guard[bit] = '0'
+    if guard[bit] == '1':
+        if skip_ones:
+            test_guard[bit] = '1'
+        else:
+            test_guard[bit] = '0'
     elif guard[bit] == '0':
         test_guard[bit] = '1'
-    else:
+    elif guard[bit] == 'X':
         test_guard[bit] = 'X'
     test_guard = ''.join(test_guard)
     return test_guard
@@ -46,8 +49,8 @@ def replace_guard_bit(guard, bit, lit):
 def match_guards(guard, other_guard):
     match = True                # assume it is a match
     for j in range(len(guard)):
-        if guard[j] == 'X' or other_guard[j] == 'X':
-            continue            # X always matches
+        if guard[j] == 'X' and other_guard[j] == 'X':
+            continue
         if guard[j] != other_guard[j]:
             match = False       # counter-proof, cannot be a match
     return match
@@ -132,6 +135,9 @@ def simplest_adviser(synth, edges, adv_type):
             # construct hypothetical obs
             # TODO: currently this only reduces 0 entries (models are one-hot-encoding)
             test_obs = flip_guard_bit(reduced_obs, i, skip_ones=True)
+
+            if test_obs == reduced_obs:
+                continue
 
             # check if that observation exists
             can_be_reduced = True
