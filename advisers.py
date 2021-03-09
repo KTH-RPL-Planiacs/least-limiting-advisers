@@ -23,8 +23,20 @@ class AdviserObject:
                   'self.adv_type should be \"safety\" or \"fairness\", but is:', self.adv_type)
 
 
+def flip_guard_bit(guard, bit, skip_ones=False):
+    # construct hypothetical test_guard
+    test_guard = list(guard)
+    if guard[bit] == '1' and not skip_ones:
+        test_guard[bit] = '0'
+    elif guard[bit] == '0':
+        test_guard[bit] = '1'
+    else:
+        test_guard[bit] = 'X'
+    test_guard = ''.join(test_guard)
+    return test_guard
+
+
 def reduce_set_of_guards(sog):
-    # TODO REFACTORING!
     # blow up the set of guards with all possible generalizations
     new_sog = sog
     changed = True
@@ -33,14 +45,7 @@ def reduce_set_of_guards(sog):
         for guard in new_sog:  # for each guard
             for i, o in enumerate(guard):  # for each bit in the guard
                 # construct hypothetical test_guard
-                test_guard = list(guard)
-                if o == '1':
-                    test_guard[i] = '0'
-                elif o == '0':
-                    test_guard[i] = '1'
-                else:
-                    test_guard[i] = 'X'
-                test_guard = ''.join(test_guard)
+                test_guard = flip_guard_bit(guard, i)
 
                 # check if the test_guard and the guard are different (they are not if 'X' got "flipped")
                 if test_guard == guard:
@@ -111,18 +116,13 @@ def simplest_adviser(synth, edges, adv_type):
         obs = synth.nodes[es_from_pred]['ap']
         sog = synth.edges[es_from, es_to]['guards']
 
-        # TODO REFACTORING!
         # reduce obs -> for each ap, check if a state with that ap flipped, but others same exists.
         reduced_obs = obs
         for i, o in enumerate(obs):
             # construct hypothetical obs
-            test_obs = list(reduced_obs)
-            if o == '1':
-                continue    # TODO: currently this only reduces 0 entries (models are one-hot-encoding)
-                # test_obs[i] = '0'
-            elif o == '0':
-                test_obs[i] = '1'
-            test_obs = ''.join(test_obs)
+            # TODO: currently this only reduces 0 entries (models are one-hot-encoding)
+            test_obs = flip_guard_bit(reduced_obs, i, skip_ones=True)
+
             # check if that observation exists
             can_be_reduced = True
             for node, data in synth.nodes(data=True):
