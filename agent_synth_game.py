@@ -218,21 +218,22 @@ class AgentSynthGame:
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
 
-    def prune_game(self):
+    def prune_game(self, additional_pruning=False):
         # prune by own safety advisers
         for adviser in self.own_advisers:
             self.delete_unsafe_edges_ssa(adviser)
 
-        # prune unreachable nodes
-        reach = nx.single_source_shortest_path_length(self.synth, self.synth.graph['init'])
+        if additional_pruning:
+            # prune unreachable nodes
+            reach = nx.single_source_shortest_path_length(self.synth, self.synth.graph['init'])
 
-        unreachable_nodes = []
-        for node in self.synth.nodes:
-            if node not in reach.keys():
-                unreachable_nodes.append(node)
+            unreachable_nodes = []
+            for node in self.synth.nodes:
+                if node not in reach.keys():
+                    unreachable_nodes.append(node)
 
-        for urn in unreachable_nodes:
-            self.synth.remove_node(urn)
+            for urn in unreachable_nodes:
+                self.synth.remove_node(urn)
 
     def adviser_to_spec(self, adviser):
         if adviser.adv_type != 'safety':
