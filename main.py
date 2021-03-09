@@ -45,16 +45,12 @@ class AdviserFramework:
             print('########################')
             print('')
 
-            # FAIRNESS ASSUMPTIONS
-            start_time = time.time()
-
             for agent in self.agents:
                 fairness_edges = minimal_fairness_edges(agent.synth, agent.name, self.prism_handler)
                 sfa = simplest_adviser(agent.synth, fairness_edges, 'fairness')
 
                 if len(sfa.adviser) > 0:
                     print('Fairness Advisers for Agent %s:' % agent.name)
-                    sfa.print_advice()
                     agent.own_advisers.append(sfa)
                     agent.fairness_edges.extend(fairness_edges)
 
@@ -63,12 +59,25 @@ class AdviserFramework:
                             continue
 
                         other_agent.other_advisers.append(sfa)
-                        #TODO: incorporate fairness
+                        # TODO: incorporate fairness
 
             print('Computed locally minimal set of fairness assumptions.')
             print('Took', time.time() - start_time, 'seconds.\n')
 
+            # TODO: unfinished
             fairness_changed = False
+
+        print('Fairness converged after %i rounds.' % rounds)
+        print('Took', time.time() - fairness_start_time, 'seconds. \n')
+        print('')
+
+        for agent in self.agents:
+            print('Final Fairness Advisers for Agent %s:' % agent.name)
+            for adviser in agent.own_advisers:
+                if not adviser.adv_type == 'fairness':
+                    continue
+                adviser.print_advice()
+            print('')
 
     def compute_and_exchange_safety(self):
         safety_start_time = time.time()
@@ -140,6 +149,9 @@ class AdviserFramework:
         for agent in self.agents:
             print('Final Safety Advisers for Agent %s:' % agent.name)
             for adviser in agent.own_advisers:
+                if not adviser.adv_type == 'safety':
+                    continue
+
                 adviser.print_advice()
             print('')
 
