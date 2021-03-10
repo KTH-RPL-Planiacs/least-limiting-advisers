@@ -58,18 +58,19 @@ class AgentSynthGame:
 
     def __init__(self, mdp, formula, name='agent'):
         self.mdp = mdp
-        self.spec = [formula]
+        self.spec = formula
         self.dfa = None
         self.synth = nx.DiGraph()
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
+        self.safety_formulas = []
         self.fairness_edges = []
 
     def get_spec_formula(self):
-        f = ''
+        f = self.spec
 
-        for s in self.spec:
+        for s in self.safety_formulas:
             f += '(' + s + ') & '
 
         return f[:-3]
@@ -241,31 +242,4 @@ class AgentSynthGame:
             for urn in unreachable_nodes:
                 self.synth.remove_node(urn)
 
-    def adviser_to_spec(self, adviser):
-        if adviser.adv_type != 'safety':
-            print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
-            return
 
-        for pre, advs in adviser.adviser.items():
-            pre_f = ''
-            for index, value in enumerate(pre):
-                if value == '1':
-                    pre_f += adviser.pre_ap[index].lower() + ' & '
-                elif value == '0':
-                    pre_f += '!' + adviser.pre_ap[index].lower() + ' & '
-                else:
-                    assert value == 'X', value
-
-            adv_f = ''
-            for adv in advs:
-                for index, value in enumerate(adv):
-                    if value == '1':
-                        adv_f += adviser.adv_ap[index].lower() + ' & '
-                    elif value == '0':
-                        adv_f += '!' + adviser.adv_ap[index].lower() + ' & '
-                    else:
-                        assert value == 'X', value
-                adv_f = adv_f[0:-3] + ' | '
-
-            spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
-            self.spec.append(spec)

@@ -22,6 +22,39 @@ class AdviserObject:
             print('This Adviser is not correctly initialized! '
                   'self.adv_type should be \"safety\" or \"fairness\", but is:', self.adv_type)
 
+    def safety_adviser_to_spec(self):
+        if self.adv_type != 'safety':
+            print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
+            return
+
+        safety_formulas = []
+
+        for pre, advs in self.adviser.items():
+            pre_f = ''
+            for index, value in enumerate(pre):
+                if value == '1':
+                    pre_f += self.pre_ap[index].lower() + ' & '
+                elif value == '0':
+                    pre_f += '!' + self.pre_ap[index].lower() + ' & '
+                else:
+                    assert value == 'X', value
+
+            adv_f = ''
+            for adv in advs:
+                for index, value in enumerate(adv):
+                    if value == '1':
+                        adv_f += self.adv_ap[index].lower() + ' & '
+                    elif value == '0':
+                        adv_f += '!' + self.adv_ap[index].lower() + ' & '
+                    else:
+                        assert value == 'X', value
+                adv_f = adv_f[0:-3] + ' | '
+
+            spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
+            safety_formulas.append(spec)
+
+        return safety_formulas
+
 
 def flip_guard_bit(guard, bit, skip_ones=False):
     # construct hypothetical test_guard
