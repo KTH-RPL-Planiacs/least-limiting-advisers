@@ -19,7 +19,6 @@ class AdviserFramework:
     def __init__(self, agents):
         # PRISM API gateway
         try:
-            self.agents = agents
             self.prism_handler = PrismHandler()
             print('Successfully connected to PRISM java gateway!')
         except Py4JNetworkError as err:
@@ -28,8 +27,9 @@ class AdviserFramework:
                   'Compile and launch prismhandler/PrismEntryPoint.java!')
             sys.exit()
 
-        # LTLf -> DFA parser init
         self.ltlf_parser = LTLf2nxParser()
+        self.agents = agents
+        self.create_synth_games()
 
     def create_synth_games(self):
         start_time = time.time()
@@ -41,6 +41,19 @@ class AdviserFramework:
 
         print('Created synthesis games for all agents.')
         print('Took', time.time() - start_time, 'seconds. \n')
+
+    def check_winnable(self, verbose=True):
+        results = []
+        # check if agents can win with the current game
+        for agent in self.agents:
+            prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
+            self.prism_handler.load_model_file(prism_model)
+            result = self.prism_handler.check_bool_property('<< p1 >> P>=1 [F \"accept\"]')
+            results.append(result[0])
+            if verbose:
+                print('Agent %s has a winning strategy:' % agent.name, result[0])
+
+        return results
 
     def compute_and_exchange_fairness(self):
         fairness_start_time = time.time()
@@ -72,7 +85,6 @@ class AdviserFramework:
                             continue
 
                         other_agent.other_advisers.append(sfa)
-                        # TODO: incorporate fairness
 
             print('Computed locally minimal set of fairness assumptions.')
             print('Took', time.time() - start_time, 'seconds.\n')
@@ -97,7 +109,6 @@ class AdviserFramework:
         safety_changed = True
         rounds = 0
         while safety_changed:
-            start_time = time.time()
             print('')
             print('########################')
             print('Starting safety computations round %i...' % (rounds + 1))
@@ -105,21 +116,6 @@ class AdviserFramework:
             print('')
 
             self.create_synth_games()
-
-            winnable = []
-            # check if agents can win
-            for agent in self.agents:
-                prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
-                self.prism_handler.load_model_file(prism_model)
-                result = self.prism_handler.check_bool_property('<< p1 >> P>=1 [F \"accept\"]')
-                winnable.append(result[0])
-                print('Agent %s has a winning strategy:' % agent.name, result[0])
-
-            if all(winnable):
-                print('No adviser computation necessary, winning strategies already exists!')
-                break
-            else:
-                print('Winning strategy does not exist for some agents, will compute minimal safety assumptions.')
 
             # SAFETY ASSUMPTIONS
             # call PRISM-games to compute cooperative safe set
@@ -168,4 +164,10 @@ if __name__ == '__main__':
                    AgentSynthGame(mdp=corridor_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')]
 
     framework = AdviserFramework(agents_list)
-    framework.compute_and_exchange_fairness()
+    winnable = framework.check_winnable()
+
+    if all(winnable):
+        print('No adviser computation necessary, winning strategies already exists!')
+    else:
+        print('Winning strategy does not exist for some agents, will compute minimal assumptions.')
+        framework.compute_and_exchange_fairness()
