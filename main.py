@@ -31,10 +31,23 @@ class AdviserFramework:
         # LTLf -> DFA parser init
         self.ltlf_parser = LTLf2nxParser()
 
+    def create_synth_games(self):
+        start_time = time.time()
+        for agent in self.agents:
+            agent.create_dfa(self.ltlf_parser)          # update spec according to other safety advisers and create DFA
+            agent.create_synthesis_game()               # create synthesis game
+            # TODO                                      # update edges that can be assumed fair
+            agent.prune_game(additional_pruning=True)   # modify game according to own safety and fairness advisers
+
+        print('Created synthesis games for all agents.')
+        print('Took', time.time() - start_time, 'seconds. \n')
+
     def compute_and_exchange_fairness(self):
         fairness_start_time = time.time()
         fairness_changed = True
         rounds = 0
+
+        # compute safety first
         self.compute_and_exchange_safety()
 
         while fairness_changed:
@@ -91,13 +104,7 @@ class AdviserFramework:
             print('########################')
             print('')
 
-            for agent in self.agents:
-                agent.create_dfa(self.ltlf_parser)
-                agent.create_synthesis_game()
-                agent.prune_game(additional_pruning=True)
-
-            print('Created synthesis games for all agents.')
-            print('Took', time.time() - start_time, 'seconds. \n')
+            self.create_synth_games()
 
             winnable = []
             # check if agents can win
@@ -134,7 +141,6 @@ class AdviserFramework:
                             continue
 
                         other_agent.other_advisers.append(ssa)
-                        other_agent.adviser_to_spec(ssa)
 
             rounds += 1
             print('Called PRISM-games to compute cooperative reachability objective.')
