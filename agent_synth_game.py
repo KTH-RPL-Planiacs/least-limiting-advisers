@@ -268,7 +268,7 @@ class AgentSynthGame:
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
 
-    def prune_game(self, additional_pruning=False):
+    def modify_game_through_advisers(self, additional_pruning=False):
         fairness_edges = []
 
         # prune by own safety advisers and collect assumed fair edges
