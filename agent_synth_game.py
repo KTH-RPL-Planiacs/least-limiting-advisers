@@ -64,7 +64,6 @@ class AgentSynthGame:
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
-        self.fairness_edges = []
 
     def get_spec_formula(self):
         """
@@ -197,6 +196,40 @@ class AgentSynthGame:
         for edge in safety_edges:
             self.synth.remove_edge(edge[0], edge[1])
 
+    # returns edges affected by OWN simplest fairness adviser
+    def assumed_fair_edges_sfa(self, sfa):
+        assert sfa.adv_type == 'fairness'
+        assert sfa.pre_ap == self.synth.graph['ap']
+        assert set(sfa.adv_ap).issubset(set(self.synth.graph['env_ap']))
+
+        fairness_edges = []
+
+        for pre, adv in sfa.adviser.items():
+            for node, data in self.synth.nodes(data=True):
+                # check if it's a player 2 state
+                if data['player'] != 2:
+                    continue
+
+                # check if the preceding player 1 state fulfills the precondition
+                assert len(list(self.synth.predecessors(node))) == 1, \
+                    '<AgentSynthGame.assumed_fair_edges_sfa>: Your synthesized game has errors in the construction'
+                node_pred = list(self.synth.predecessors(node))[0]
+
+                if not sog_fits_to_guard(self.synth.nodes[node_pred]['ap'], [pre], self.synth.graph['ap'], sfa.pre_ap):
+                    continue
+
+                # this is a state that matches the preconditions
+                for succ in self.synth.successors(node):
+
+                    guards = deepcopy(self.synth.edges[node, succ]['guards'])
+                    for g in adv:
+                        matched_guards = sog_fits_to_guard(g, guards, sfa.adv_ap, self.synth.graph['env_ap'])
+                        if matched_guards:
+                            fairness_edges.append((node, succ, self.synth.edges[node, succ]))
+                            break
+
+        return fairness_edges
+
     # delete edges specified by OWN simplest safety adviser, which is an overapproximation of the actual needed edges
     def delete_unsafe_edges_ssa(self, ssa):
         assert ssa.adv_type == 'safety'
@@ -236,13 +269,17 @@ class AgentSynthGame:
                     self.synth.remove_edge(rem_f, rem_t)
 
     def prune_game(self, additional_pruning=False):
-        # prune by own safety advisers
+        fairness_edges = []
+
+        # prune by own safety advisers and collect assumed fair edges
         for adviser in self.own_advisers:
             if adviser.adv_type == 'safety':
                 self.delete_unsafe_edges_ssa(adviser)
+            if adviser.adv_type == 'fairness':
+                fairness_edges.extend(self.assumed_fair_edges_sfa(adviser))
 
         # modify by own fairness edges
-        self.synth = construct_fair_game(self.synth, self.fairness_edges)
+        self.synth = construct_fair_game(self.synth, fairness_edges)
 
         if additional_pruning:
             # prune unreachable nodes
