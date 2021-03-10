@@ -64,16 +64,30 @@ class AgentSynthGame:
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
-        self.safety_formulas = []
         self.fairness_edges = []
 
     def get_spec_formula(self):
+        """
+        creates the spec formula from own spec + other safety advisers
+        :return: the full LTLf specification formula
+        """
         f = self.spec
 
-        for s in self.safety_formulas:
+        safety_formulas = []
+        for adviser in self.other_advisers:
+            if not adviser.adv_type == 'safety':
+                continue
+
+            safety_formulas.extend(adviser.safety_adviser_to_spec())
+
+        f += ' & '
+
+        for s in safety_formulas:
             f += '(' + s + ') & '
 
-        return f[:-3]
+        f = f[:-3]
+
+        return f
 
     def create_dfa(self, parser):
         full_spec = self.get_spec_formula()
@@ -241,5 +255,3 @@ class AgentSynthGame:
 
             for urn in unreachable_nodes:
                 self.synth.remove_node(urn)
-
-
