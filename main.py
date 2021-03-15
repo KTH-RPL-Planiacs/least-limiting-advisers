@@ -98,7 +98,8 @@ class AdviserFramework:
         for agent in self.agents:
             agent.create_dfa(self.ltlf_parser)          # update spec according to other safety advisers and create DFA
             agent.create_synthesis_game()               # create synthesis game
-            agent.modify_game_through_advisers(additional_pruning=True)   # modify game according to own safety and fairness advisers
+            agent.modify_game_own_advisers(
+                additional_pruning=True)  # modify game according to own safety and fairness advisers
 
         print('Created synthesis games for all agents.')
         print('Took', time.time() - start_time, 'seconds. \n')
