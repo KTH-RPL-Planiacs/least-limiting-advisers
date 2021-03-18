@@ -1,3 +1,11 @@
+from enum import Enum
+
+
+class AdviserType(Enum):
+    SAFETY = 0
+    FAIRNESS = 1
+
+
 class AdviserObject:
 
     def __init__(self, pre_ap, adv_ap, pre_init, adv_type):
@@ -8,22 +16,22 @@ class AdviserObject:
         self.pre_init = pre_init
 
     def print_advice(self):
-        if self.adv_type == 'safety':
+        if self.adv_type == AdviserType.SAFETY:
             if len(self.adviser) == 0:
                 print('No safety advice!')
             for obs, sog in self.adviser.items():
                 print('If', obs, self.pre_ap, ', next never do', list(sog), self.adv_ap)
-        elif self.adv_type == 'fairness':
+        elif self.adv_type == AdviserType.FAIRNESS:
             if len(self.adviser) == 0:
                 print('No fairness advice!')
             for obs, sog in self.adviser.items():
                 print('If', obs, self.pre_ap, ', next sometimes do', list(sog), self.adv_ap)
         else:
             print('This Adviser is not correctly initialized! '
-                  'self.adv_type should be \"safety\" or \"fairness\", but is:', self.adv_type)
+                  'self.adv_type should be \"SAFETY\" or \"FAIRNESS\", but is:', self.adv_type)
 
     def safety_adviser_to_spec(self):
-        if self.adv_type != 'safety':
+        if self.adv_type != AdviserType.SAFETY:
             print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
             return
 

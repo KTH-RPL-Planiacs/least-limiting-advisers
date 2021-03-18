@@ -3,6 +3,7 @@ import queue
 from itertools import chain, combinations
 from copy import deepcopy
 from fairness_assumptions import construct_fair_game
+from advisers import AdviserType
 
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
@@ -74,7 +75,7 @@ class AgentSynthGame:
 
         safety_formulas = []
         for adviser in self.other_advisers:
-            if not adviser.adv_type == 'safety':
+            if not adviser.adv_type == AdviserType.SAFETY:
                 continue
 
             safety_formulas.extend(adviser.safety_adviser_to_spec())
@@ -198,7 +199,7 @@ class AgentSynthGame:
 
     # returns edges affected by OWN simplest fairness adviser
     def assumed_fair_edges_sfa(self, sfa):
-        assert sfa.adv_type == 'fairness'
+        assert sfa.adv_type == AdviserType.FAIRNESS
         assert sfa.pre_ap == self.synth.graph['ap']
         assert set(sfa.adv_ap).issubset(set(self.synth.graph['env_ap']))
 
@@ -232,7 +233,7 @@ class AgentSynthGame:
 
     # delete edges specified by OWN simplest safety adviser, which is an overapproximation of the actual needed edges
     def delete_unsafe_edges_ssa(self, ssa):
-        assert ssa.adv_type == 'safety'
+        assert ssa.adv_type == AdviserType.SAFETY
         assert ssa.pre_ap == self.synth.graph['ap']
         assert set(ssa.adv_ap).issubset(set(self.synth.graph['env_ap']))
 
@@ -273,9 +274,9 @@ class AgentSynthGame:
 
         # prune by own safety advisers and collect assumed fair edges
         for adviser in self.own_advisers:
-            if adviser.adv_type == 'safety':
+            if adviser.adv_type == AdviserType.SAFETY:
                 self.delete_unsafe_edges_ssa(adviser)
-            if adviser.adv_type == 'fairness':
+            if adviser.adv_type == AdviserType.FAIRNESS:
                 fairness_edges.extend(self.assumed_fair_edges_sfa(adviser))
 
         # modify by own fairness edges
@@ -292,3 +293,43 @@ class AgentSynthGame:
 
             for urn in unreachable_nodes:
                 self.synth.remove_node(urn)
+
+    # infers additional safety advice from fairness advice
+    def check_fairness_feasibility(self, adviser):
+
+        if not adviser.adv_type == AdviserType.FAIRNESS:
+            return
+
+        for obs, adv in adviser.adviser.items():
+            # in each player 1 state, if player 1 cannot fulfill the advice, then this induces new safety advice.
+            for node, data in self.synth.nodes(data=True):
+                # check if it's a player 1 state
+                if data['player'] != 1:
+                    continue
+
+                can_fulfill = False
+                # check if they have actions that would fulfill the advice
+                mdp_state = node[0]
+
+                for mdp_succ in self.mdp.successors(mdp_state):
+                    valid_choice = False
+                    for outcome in self.mdp.successors(mdp_succ):
+                        outcome_obs = self.mdp.nodes[outcome]['ap'][0]
+                        fitting_sog = sog_fits_to_guard(outcome_obs, adv, self.mdp.graph['ap'], adviser.adv_ap)
+                        if fitting_sog:
+                            valid_choice = True
+                            break
+
+                    if valid_choice:
+                        can_fulfill = True
+                        break
+
+                if not can_fulfill:
+                    print('IN THIS STATE', node, 'I CANNOT FULFILL:')
+                    print(adviser.print_advice())
+                    print('')
+
+    # modify the game according to "simplest fairness incorporation"
+    # just fulfill the advice every time with probability > 0
+    def modify_game_other_fairness(self):
+        pass

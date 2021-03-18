@@ -10,7 +10,7 @@ from prismhandler.prism_handler import PrismHandler
 from prismhandler.prism_io import write_prism_model
 from safety_assumptions import minimal_safety_edges
 from fairness_assumptions import minimal_fairness_edges
-from advisers import simplest_adviser
+from advisers import simplest_adviser, AdviserType
 from models import *
 
 
@@ -41,15 +41,19 @@ class AdviserFramework:
 
         print('Winning strategy does not exist for some agents, will compute minimal assumptions.\n')
 
-        fairness_start_time = time.time()
         fairness_changed = True
         fairness_rounds = 0
         while fairness_changed:
             fairness_rounds += 1
 
+            print('######################################')
+            print('###### Adviser Exchange Round %i ######' % fairness_rounds)
+            print('######################################\n')
+
             safety_start_time = time.time()
             safety_changed = True
             safety_rounds = 0
+            print('Beginning safety computations...\n')
 
             while safety_changed:
                 safety_rounds += 1
@@ -58,39 +62,44 @@ class AdviserFramework:
                     # create new synth games with new LTLf specs
                     self.create_synth_games()
 
-            print('Safety converged after %i rounds.' % safety_rounds)
-            print('Took', time.time() - safety_start_time, 'seconds. \n')
-            print('')
+            print('Safety converged after %i rounds.' % (safety_rounds - 1))
+            print('Took', time.time() - safety_start_time, 'seconds.\n')
 
             if verbose:
                 for agent in self.agents:
                     print('Final Safety Advisers for Agent %s:' % agent.name)
                     for adviser in agent.own_advisers:
-                        if not adviser.adv_type == 'safety':
+                        if not adviser.adv_type == AdviserType.SAFETY:
                             continue
 
                         adviser.print_advice()
                     print('')
 
+            print('Beginning fairness computations...\n')
+            fairness_start_time = time.time()
             fairness_changed = self.compute_and_exchange_fairness()
+
+            print('Computed and exchanged fairness advisers.')
+            print('Took', time.time() - fairness_start_time, 'seconds.\n')
+
             if fairness_changed:
                 self.create_synth_games()
-
-            # TODO: add incorporating other fairness advisers
-            fairness_changed = False
-            print(self.check_winnable())
 
         if verbose:
             for agent in self.agents:
                 print('Final Fairness Advisers for Agent %s:' % agent.name)
                 for adviser in agent.own_advisers:
-                    if not adviser.adv_type == 'fairness':
+                    if not adviser.adv_type == AdviserType.FAIRNESS:
                         continue
                     adviser.print_advice()
                 print('')
 
-        print('Fairness converged after %i rounds.' % fairness_rounds)
-        print('Took', time.time() - fairness_start_time, 'seconds. \n\n')
+        print('Fairness converged after %i rounds.' % (fairness_rounds - 1))
+        print('Took', time.time() - abs_start_time, 'seconds.\n')
+
+        winnable = self.check_winnable()
+        if all(winnable):
+            print('Adviser Computation successful, all agents have a winning strategy yielding all advisers!')
         print('Total time elapsed:', time.time() - abs_start_time)
 
     def create_synth_games(self):
@@ -100,6 +109,7 @@ class AdviserFramework:
             agent.create_synthesis_game()               # create synthesis game
             agent.modify_game_own_advisers(
                 additional_pruning=True)  # modify game according to own safety and fairness advisers
+            agent.modify_game_other_fairness()          # modify game according to fairness advisers from other agents
 
         print('Created synthesis games for all agents.')
         print('Took', time.time() - start_time, 'seconds. \n')
@@ -114,14 +124,15 @@ class AdviserFramework:
             results.append(result[0])
             if verbose:
                 print('Agent %s has a winning strategy:' % agent.name, result[0])
-
+        if verbose:
+            print('')
         return results
 
     def compute_and_exchange_fairness(self):
         fairness_changed = False
         for agent in self.agents:
             fairness_edges = minimal_fairness_edges(agent.synth, agent.name, self.prism_handler)
-            sfa = simplest_adviser(agent.synth, fairness_edges, 'fairness')
+            sfa = simplest_adviser(agent.synth, fairness_edges, AdviserType.FAIRNESS)
 
             if len(sfa.adviser) > 0:
                 fairness_changed = True
@@ -130,7 +141,7 @@ class AdviserFramework:
                 for other_agent in self.agents:
                     if agent.name == other_agent.name:
                         continue
-
+                    other_agent.check_fairness_feasibility(sfa)
                     other_agent.other_advisers.append(sfa)
 
         return fairness_changed
@@ -144,7 +155,7 @@ class AdviserFramework:
 
         for agent in self.agents:
             safety_edges = minimal_safety_edges(agent.synth, agent.name + '_safety', self.prism_handler)
-            ssa = simplest_adviser(agent.synth, safety_edges, 'safety')
+            ssa = simplest_adviser(agent.synth, safety_edges, AdviserType.SAFETY)
 
             if len(ssa.adviser) > 0:
                 safety_changed = True
@@ -165,4 +176,4 @@ if __name__ == '__main__':
                    AgentSynthGame(mdp=corridor_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')]
 
     framework = AdviserFramework(agents_list)
-    framework.complete_strategy_synthesis()
+    framework.complete_strategy_synthesis(verbose=True)
