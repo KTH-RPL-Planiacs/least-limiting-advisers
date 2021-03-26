@@ -294,42 +294,91 @@ class AgentSynthGame:
             for urn in unreachable_nodes:
                 self.synth.remove_node(urn)
 
-    # infers additional safety advice from fairness advice
-    def check_fairness_feasibility(self, adviser):
-
-        if not adviser.adv_type == AdviserType.FAIRNESS:
-            return
-
-        for obs, adv in adviser.adviser.items():
-            # in each player 1 state, if player 1 cannot fulfill the advice, then this induces new safety advice.
-            for node, data in self.synth.nodes(data=True):
-                # check if it's a player 1 state
-                if data['player'] != 1:
-                    continue
-
-                can_fulfill = False
-                # check if they have actions that would fulfill the advice
-                mdp_state = node[0]
-
-                for mdp_succ in self.mdp.successors(mdp_state):
-                    valid_choice = False
-                    for outcome in self.mdp.successors(mdp_succ):
-                        outcome_obs = self.mdp.nodes[outcome]['ap'][0]
-                        fitting_sog = sog_fits_to_guard(outcome_obs, adv, self.mdp.graph['ap'], adviser.adv_ap)
-                        if fitting_sog:
-                            valid_choice = True
-                            break
-
-                    if valid_choice:
-                        can_fulfill = True
-                        break
-
-                if not can_fulfill:
-                    print('IN THIS STATE', node, 'I CANNOT FULFILL:')
-                    print(adviser.print_advice())
-                    print('')
-
     # modify the game according to "simplest fairness incorporation"
     # just fulfill the advice every time with probability > 0
     def modify_game_other_fairness(self):
-        pass
+        nodes_to_add = {}
+
+        for sfa in self.other_advisers:
+            if not sfa.adv_type == AdviserType.FAIRNESS:
+                continue
+
+            for obs, adv in sfa.adviser.items():
+                # in each player 1 state, if player 1 cannot fulfill the advice, then this induces new safety advice.
+                for node, data in self.synth.nodes(data=True):
+                    # check if it's a player 1 state
+                    if data['player'] != 1:
+                        continue
+
+                    available_actions = []
+                    promise_actions = []
+
+                    # check if they have actions that would fulfill the advice
+                    mdp_state = node[0]
+
+                    for mdp_succ in self.mdp.successors(mdp_state):
+                        available_actions.append(self.mdp.edges[mdp_state, mdp_succ]['act'])
+
+                        valid_choice = False
+                        for outcome in self.mdp.successors(mdp_succ):
+                            outcome_obs = self.mdp.nodes[outcome]['ap'][0]
+                            fitting_sog = sog_fits_to_guard(outcome_obs, adv, self.mdp.graph['ap'], sfa.adv_ap)
+                            if fitting_sog:
+                                valid_choice = True
+                                break
+
+                        if valid_choice:
+                            promise_actions.append(self.mdp.edges[mdp_state, mdp_succ]['act'])
+
+                    if not promise_actions:
+                        print('IN THIS STATE', node, 'I CANNOT FULFILL:')
+                        print(obs, adv)
+                        print('')
+                        return False
+
+                    if node not in nodes_to_add.keys():
+                        nodes_to_add[node] = {}
+
+                    # if all available actions fulfill the promise, we do not need to keep track of this fairness
+                    if not promise_actions == available_actions:
+                        nodes_to_add[node][(obs, tuple(sfa.pre_ap))] = promise_actions
+
+                    # make a copy of synth game player-1 state, but allow only promise_actions
+                    # promise_node = (node, 'promise_'+str(hash((obs, frozenset(adv)))))
+                    # self.synth.add_node(promise_node, player=1, ap=data['ap'])
+
+                    # for succ in self.synth.successors(node):
+                    #    if self.synth.edges[node, succ]['act'] in promise_actions:
+                    #        print(self.synth.edges[node, succ])
+                    #        self.synth.add_edge(promise_node, succ)
+
+                    # prepend probabilistic state
+
+        # we now have gathered all information about new promises and can construct the new promise_fulfilling states
+
+        for node, promises in nodes_to_add.items():
+            # create new probabilistic node to choose between promise nodes
+            prob_node = (node, 'promise')
+            self.synth.add_node(prob_node, player=0, promise_node=True)
+            p = 1 / (len(promises) + 1)
+
+            for pre, promise in promises.items():
+                # for each different fairness advice, create a promise node and connect
+                promise_node = (node, 'promise'+pre[0]+str(pre[1]))
+                self.synth.add_node(promise_node, player=1)
+                self.synth.add_edge(prob_node, promise_node, prob=p, pre=pre)
+
+                for succ in self.synth.successors(node):
+                    # connect from promise node to player-2 node,
+                    #  but only enable choice if it fulfills the promise
+                    if self.synth.edges[node, succ]['act'] in promise:
+                        self.synth.add_edge(promise_node, succ)
+
+            # don't forget the unrestrained option to the original node
+            self.synth.add_edge(prob_node, node, prob=p)
+
+            # sever old connections and reconnect
+            for pred in list(self.synth.predecessors(node)):
+                self.synth.add_edge(pred, prob_node, prob=self.synth.edges[pred, node]['prob'])
+                self.synth.remove_edge(pred, node)
+        return True

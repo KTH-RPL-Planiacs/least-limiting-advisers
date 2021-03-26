@@ -47,7 +47,7 @@ class AdviserFramework:
             fairness_rounds += 1
 
             print('######################################')
-            print('###### Adviser Exchange Round %i ######' % fairness_rounds)
+            print('###### Fairness Exchange Round %i ######' % fairness_rounds)
             print('######################################\n')
 
             safety_start_time = time.time()
@@ -65,16 +65,6 @@ class AdviserFramework:
             print('Safety converged after %i rounds.' % (safety_rounds - 1))
             print('Took', time.time() - safety_start_time, 'seconds.\n')
 
-            if verbose:
-                for agent in self.agents:
-                    print('Final Safety Advisers for Agent %s:' % agent.name)
-                    for adviser in agent.own_advisers:
-                        if not adviser.adv_type == AdviserType.SAFETY:
-                            continue
-
-                        adviser.print_advice()
-                    print('')
-
             print('Beginning fairness computations...\n')
             fairness_start_time = time.time()
             fairness_changed = self.compute_and_exchange_fairness()
@@ -85,14 +75,25 @@ class AdviserFramework:
             if fairness_changed:
                 self.create_synth_games()
 
-        if verbose:
-            for agent in self.agents:
-                print('Final Fairness Advisers for Agent %s:' % agent.name)
-                for adviser in agent.own_advisers:
-                    if not adviser.adv_type == AdviserType.FAIRNESS:
-                        continue
-                    adviser.print_advice()
-                print('')
+            if verbose:
+                print('AFTER FAIRNESS ROUND %i' % fairness_rounds)
+                # safety print
+                for agent in self.agents:
+                    print('Safety Advisers for Agent %s:' % agent.name)
+                    for adviser in agent.own_advisers:
+                        if not adviser.adv_type == AdviserType.SAFETY:
+                            continue
+
+                        adviser.print_advice()
+                    print('')
+                # fairness print
+                for agent in self.agents:
+                    print('Fairness Advisers for Agent %s:' % agent.name)
+                    for adviser in agent.own_advisers:
+                        if not adviser.adv_type == AdviserType.FAIRNESS:
+                            continue
+                        adviser.print_advice()
+                    print('')
 
         print('Fairness converged after %i rounds.' % (fairness_rounds - 1))
         print('Took', time.time() - abs_start_time, 'seconds.\n')
@@ -109,7 +110,11 @@ class AdviserFramework:
             agent.create_synthesis_game()               # create synthesis game
             agent.modify_game_own_advisers(
                 additional_pruning=True)  # modify game according to own safety and fairness advisers
-            agent.modify_game_other_fairness()          # modify game according to fairness advisers from other agents
+            result = agent.modify_game_other_fairness()          # modify game according to fairness advisers from other agents
+
+            if not result:
+                print('Agent', agent.name, 'cannot fulfill all fairness constraints. Negotiation failed.')
+                sys.exit()
 
         print('Created synthesis games for all agents.')
         print('Took', time.time() - start_time, 'seconds. \n')
@@ -141,7 +146,7 @@ class AdviserFramework:
                 for other_agent in self.agents:
                     if agent.name == other_agent.name:
                         continue
-                    other_agent.check_fairness_feasibility(sfa)
+                    # other_agent.check_fairness_feasibility(sfa)
                     other_agent.other_advisers.append(sfa)
 
         return fairness_changed
@@ -172,8 +177,8 @@ class AdviserFramework:
 
 if __name__ == '__main__':
 
-    agents_list = [AgentSynthGame(mdp=corridor_mdp('A', init_state='end_top'), formula='F(eba) & G!(crita && critb)'),
-                   AgentSynthGame(mdp=corridor_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')]
+    agents_list = [AgentSynthGame(mdp=corridor_no_turn_mdp('A', init_state='end_top'), formula='F(eba) & G!(crita && critb)'),
+                   AgentSynthGame(mdp=corridor_no_turn_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')]
 
     framework = AdviserFramework(agents_list)
     framework.complete_strategy_synthesis(verbose=True)

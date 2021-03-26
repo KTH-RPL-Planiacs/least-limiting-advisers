@@ -31,6 +31,7 @@ def construct_fair_game(synth, fairness_edges):
         # re-route incoming edges
         for pred in synth.predecessors(node):
             fairness_synth.remove_edge(pred, node)
+            assert 'act' in synth.edges[pred, node], 'EDGE (' + pred + ',' + node + ') does not have act, but should'
             fairness_synth.add_edge(pred, prob_node, act=synth.edges[pred, node]['act'])
         # add edge representing the player being free to chose
         fairness_synth.add_edge(prob_node, node, prob=(1/(1+len(fairness_dict[node]))))
