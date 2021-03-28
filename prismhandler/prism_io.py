@@ -1,92 +1,92 @@
 import sys
+import networkx as nx
+
+
+def dfs(graph, node, prob, reach_dict, path=''):
+    if graph.nodes[node]['player'] != 0:
+        # if node in reach_dict.keys():
+        #     print(path)
+        assert node not in reach_dict.keys(), 'multiple probabilistic paths to the same state!' + str(node)
+        reach_dict[node] = prob
+        return
+
+    for succ in graph.successors(node):
+        p = graph.edges[node, succ]['prob']
+        dfs(graph, succ, p*prob, reach_dict, path=path+' ## '+str(node))
 
 
 def write_prism_model(synth, name=''):
-    try:
-        file_name = 'data/%s.prism' % name
-        prism_file = open(file_name, 'w')
-        # Header
-        prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n')
-        prism_file.write('\n')
-        prism_file.write('smg \n')
-        prism_file.write('\n')
-        # player blocks
-        prism_file.write('player p1 \n')
-        prism_file.write('  [p1] \n')
-        prism_file.write('endplayer \n')
-        prism_file.write('\n')
-        prism_file.write('player p2 \n')
-        prism_file.write('  [p2] \n')
-        prism_file.write('endplayer \n')
-        prism_file.write('\n')
-        # module
-        prism_file.write('module %s \n' % name)
-        # number of states excludes probabilistic extra states
-        num_states = sum(n[1]['player'] != 0 for n in synth.nodes(data=True)) - 1
-        prism_file.write('  x : [0..%i] init 0;\n' % num_states)
-        prism_file.write('\n')
 
-        state_id = 1
-        state_ids = {}
+    file_name = 'data/%s.prism' % name
+    prism_file = open(file_name, 'w')
+    # Header
+    prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n')
+    prism_file.write('\n')
+    prism_file.write('smg \n')
+    prism_file.write('\n')
+    # player blocks
+    prism_file.write('player p1 \n')
+    prism_file.write('  [p1] \n')
+    prism_file.write('endplayer \n')
+    prism_file.write('\n')
+    prism_file.write('player p2 \n')
+    prism_file.write('  [p2] \n')
+    prism_file.write('endplayer \n')
+    prism_file.write('\n')
+    # module
+    prism_file.write('module %s \n' % name)
+    # number of states excludes probabilistic extra states
+    num_states = sum(n[1]['player'] != 0 for n in synth.nodes(data=True)) - 1
+    prism_file.write('  x : [0..%i] init 0;\n' % num_states)
+    prism_file.write('\n')
 
-        synth_init = synth.graph['init']
-        state_ids[synth_init] = 0
+    state_id = 1
+    state_ids = {}
 
-        for synth_from, synth_to in synth.edges():
-            # player 3 states and probabilistic transitions are encoded in player 1 and 2 transitions
-            if synth.nodes[synth_from]['player'] == 0:
-                continue
+    synth_init = synth.graph['init']
+    state_ids[synth_init] = 0
 
-            assert synth.nodes[synth_from]['player'] in [1, 2]
-            # id of the originating state
-            if synth_from not in state_ids.keys():
-                state_ids[synth_from] = state_id
-                state_id += 1
-            from_id = state_ids[synth_from]
+    for node in synth.nodes():
+        # probabilistic states are encoded in player 1 and 2 transitions
+        if synth.nodes[node]['player'] == 0:
+            continue
 
-            # the successor is a non-probabilistic state, so create the transition
-            if synth.nodes[synth_to]['player'] != 0:
-                # id of the successor state
-                if synth_to not in state_ids.keys():
-                    state_ids[synth_to] = state_id
+        assert synth.nodes[node]['player'] in [1, 2], 'node is neither player 0,1 or 2!'
+        # id of the originating state
+        if node not in state_ids.keys():
+            state_ids[node] = state_id
+            state_id += 1
+        node_id = state_ids[node]
+
+        # each successor represents a choice
+        for succ in synth.successors(node):
+            transition_str = '  [p%i] x=%i -> ' % (synth.nodes[node]['player'], node_id)
+            reach_dict = {}
+            # depth-first-search for path through probabilistic states
+            dfs(synth, succ, 1, reach_dict)
+
+            for reach_node, reach_prob in reach_dict.items():
+                if reach_node not in state_ids.keys():
+                    state_ids[reach_node] = state_id
                     state_id += 1
-                to_id = state_ids[synth_to]
-                # player 1 transition written to PRISM
-                prism_file.write('  [p%i] x=%i -> (x\'=%i); \n' % (synth.nodes[synth_from]['player'], from_id, to_id))
+                reach_node_id = state_ids[reach_node]
+                transition_str += '%f : (x\'=%i) + ' % (reach_prob, reach_node_id)
+            transition_str = transition_str[:-3] + ';\n'
+            prism_file.write(transition_str)
 
-            # the successor is a probabilistic state, so accumulate all possible outcomes of that choice
-            else:
-                transition_str = '  [p%i] x=%i -> ' % (synth.nodes[synth_from]['player'], from_id)
-                for synth_succ in synth.successors(synth_to):
-                    assert synth.nodes[synth_succ]['player'] in [1, 2]
-                    # the successor should be a player state, so get the id
-                    if synth_succ not in state_ids.keys():
-                        state_ids[synth_succ] = state_id
-                        state_id += 1
-                    succ_id = state_ids[synth_succ]
-                    prob = synth.edges[synth_to, synth_succ]['prob']
-                    transition_str += '%f : (x\'=%i) + ' % (prob, succ_id)   # accumulate possible outcomes
-                transition_str = transition_str[:-3] + ';\n'
-                prism_file.write(transition_str)
+    prism_file.write('\n')
+    prism_file.write('endmodule \n')
+    prism_file.write('\n')
 
-        prism_file.write('\n')
-        prism_file.write('endmodule \n')
-        prism_file.write('\n')
+    assert len(synth.graph['acc']) > 0, '<write_prism_model> There are no accepting states!'
 
-        assert len(synth.graph['acc']) > 0, '<write_prism_model> There are no accepting states!'
+    reach_cond = '('
+    for acc_state in synth.graph['acc']:
+        acc_id = state_ids[acc_state]
+        reach_cond += 'x=%i | ' % acc_id
+    reach_cond = reach_cond[:-3] + ')'
+    prism_file.write('label "accept" = %s ;\n' % reach_cond)
 
-        reach_cond = '('
-        for acc_state in synth.graph['acc']:
-            acc_id = state_ids[acc_state]
-            reach_cond += 'x=%i | ' % acc_id
-        reach_cond = reach_cond[:-3] + ')'
-        prism_file.write('label "accept" = %s ;\n' % reach_cond)
+    prism_file.close()
 
-        prism_file.close()
-
-        return file_name, state_ids
-
-    except Exception as err:
-        print('<write_prism_model>: an error occurred, no model file was written!')
-        print(err)
-        sys.exit(0)
+    return file_name, state_ids

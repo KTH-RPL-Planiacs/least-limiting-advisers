@@ -343,20 +343,10 @@ class AgentSynthGame:
                     if not promise_actions == available_actions:
                         nodes_to_add[node][(obs, tuple(sfa.pre_ap))] = promise_actions
 
-                    # make a copy of synth game player-1 state, but allow only promise_actions
-                    # promise_node = (node, 'promise_'+str(hash((obs, frozenset(adv)))))
-                    # self.synth.add_node(promise_node, player=1, ap=data['ap'])
-
-                    # for succ in self.synth.successors(node):
-                    #    if self.synth.edges[node, succ]['act'] in promise_actions:
-                    #        print(self.synth.edges[node, succ])
-                    #        self.synth.add_edge(promise_node, succ)
-
-                    # prepend probabilistic state
-
         # we now have gathered all information about new promises and can construct the new promise_fulfilling states
-
         for node, promises in nodes_to_add.items():
+            # save old predecessors of node for later
+            node_preds = list(self.synth.predecessors(node))
             # create new probabilistic node to choose between promise nodes
             prob_node = (node, 'promise')
             self.synth.add_node(prob_node, player=0, promise_node=True)
@@ -378,7 +368,7 @@ class AgentSynthGame:
             self.synth.add_edge(prob_node, node, prob=p)
 
             # sever old connections and reconnect
-            for pred in list(self.synth.predecessors(node)):
+            for pred in node_preds:
                 self.synth.add_edge(pred, prob_node, prob=self.synth.edges[pred, node]['prob'])
                 self.synth.remove_edge(pred, node)
         return True
