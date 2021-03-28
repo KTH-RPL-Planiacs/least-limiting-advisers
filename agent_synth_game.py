@@ -269,7 +269,7 @@ class AgentSynthGame:
                 for rem_f, rem_t in to_remove:
                     self.synth.remove_edge(rem_f, rem_t)
 
-    def modify_game_own_advisers(self, additional_pruning=False):
+    def modify_game_own_advisers(self):
         fairness_edges = []
 
         # prune by own safety advisers and collect assumed fair edges
@@ -281,18 +281,6 @@ class AgentSynthGame:
 
         # modify by own fairness edges
         self.synth = construct_fair_game(self.synth, fairness_edges)
-
-        if additional_pruning:
-            # prune unreachable nodes
-            reach = nx.single_source_shortest_path_length(self.synth, self.synth.graph['init'])
-
-            unreachable_nodes = []
-            for node in self.synth.nodes:
-                if node not in reach.keys():
-                    unreachable_nodes.append(node)
-
-            for urn in unreachable_nodes:
-                self.synth.remove_node(urn)
 
     # modify the game according to "simplest fairness incorporation"
     # just fulfill the advice every time with probability > 0
@@ -372,3 +360,17 @@ class AgentSynthGame:
                 self.synth.add_edge(pred, prob_node, prob=self.synth.edges[pred, node]['prob'])
                 self.synth.remove_edge(pred, node)
         return True
+
+    def prune_unreachable_states(self):
+        reach = nx.single_source_shortest_path_length(self.synth, source=self.synth.graph['init'])
+
+        unreachable_nodes = []
+        for node in self.synth.nodes:
+            if node not in reach.keys():
+                unreachable_nodes.append(node)
+
+        for urn in unreachable_nodes:
+            self.synth.remove_node(urn)
+
+            if urn in self.synth.graph['acc']:
+                self.synth.graph['acc'].remove(urn)

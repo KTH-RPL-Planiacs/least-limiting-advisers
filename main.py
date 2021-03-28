@@ -108,10 +108,9 @@ class AdviserFramework:
         for agent in self.agents:
             agent.create_dfa(self.ltlf_parser)          # update spec according to other safety advisers and create DFA
             agent.create_synthesis_game()               # create synthesis game
-            agent.modify_game_own_advisers(
-                additional_pruning=True)  # modify game according to own safety and fairness advisers
+            agent.modify_game_own_advisers()  # modify game according to own safety and fairness advisers
             result = agent.modify_game_other_fairness()          # modify game according to fairness advisers from other agents
-
+            agent.prune_unreachable_states()
             if not result:
                 print('Agent', agent.name, 'cannot fulfill all fairness constraints. Negotiation failed.')
                 sys.exit()
