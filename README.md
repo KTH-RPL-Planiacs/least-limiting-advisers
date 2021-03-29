@@ -38,14 +38,3 @@ Once the gateway is running, run the main code or the unittests:
 ```
 python3 main.py
 ```
-
-## Commit Conventions
-
-Every commit is associated with one of the following types:
-
-* (feature) - added functionality to the code
-* (bugfix) - fixed bugs in the code
-* (test) - added or changed unittests
-* (refactor) - refactored the structure of the code without changing the functionality
-* (cleanup) - minor code cleanups like removing unused imports or changing some comment lines/whitespaces
-* (other) - a commit that doesn't fit any category above; should rarely be used
