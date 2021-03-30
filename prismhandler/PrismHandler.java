@@ -102,7 +102,7 @@ public class PrismHandler {
                 prism.getSettings().set(PrismSettings.PRISM_GENERATE_STRATEGY, true);
                 Result result = prism.modelCheck(property);
                 strat = result.getStrategy();
-                prism.getBuiltModelExplicit().exportToDotFile("output.dot");
+                //prism.getBuiltModelExplicit().exportToDotFile("output.dot");
             } catch (PrismException e) {
                 System.out.println("Error: " + e.getMessage());
                 System.exit(1);

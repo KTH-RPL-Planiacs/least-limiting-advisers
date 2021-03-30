@@ -72,14 +72,18 @@ def write_prism_model(synth, name=''):
 
     # player 1
     prism_file.write('player p1 \n')
+    p1_action_str = ''
     for action in p1_actions:
-        prism_file.write('  ' + action + '\n')
+        p1_action_str += '  ' + action + ',\n'
+    prism_file.write(p1_action_str[:-2] + '\n')
     prism_file.write('endplayer \n\n')
 
     # player 2
     prism_file.write('player p2 \n')
+    p2_action_str = ''
     for action in p2_actions:
-        prism_file.write('  ' + action + '\n')
+        p2_action_str += '  ' + action + ',\n'
+    prism_file.write(p2_action_str[:-2] + '\n')
     prism_file.write('endplayer \n\n')
 
     # label accepting states

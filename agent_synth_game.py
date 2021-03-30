@@ -350,7 +350,7 @@ class AgentSynthGame:
                     # connect from promise node to player-2 node,
                     #  but only enable choice if it fulfills the promise
                     if self.synth.edges[node, succ]['act'] in promise:
-                        self.synth.add_edge(promise_node, succ)
+                        self.synth.add_edge(promise_node, succ, act=self.synth.edges[node, succ]['act'])
 
             # don't forget the unrestrained option to the original node
             self.synth.add_edge(prob_node, node, prob=p)
