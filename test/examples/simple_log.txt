@@ -1,0 +1,93 @@
+PRISM-games
+===========
+
+Version: 3.0 (based on PRISM 4.6)
+Date: Tue Mar 30 13:11:39 CEST 2021
+Hostname: gschup-ubuntu
+Memory limits: cudd=1g, java(heap)=910.5m
+
+Type:        SMG
+Modules:     strat_test 
+Variables:   x 
+
+Switching to explicit engine, which supports SMGs...
+
+---------------------------------------------------------------------
+
+Building model...
+
+Computing reachable states... 3 states
+Reachable states exploration and model construction done in 0.007 secs.
+Sorting reachable states list...
+
+Time for model construction: 0.014 seconds.
+
+Type:        SMG
+States:      3 (1 initial)
+Transitions: 4
+Choices:     4
+Max/avg:     2/1.33
+
+---------------------------------------------------------------------
+
+Model checking: <<p1>>P>=1 [ F x=2 ]
+
+Starting probabilistic reachability...
+Starting Prob0 (maxmin)...
+Prob0 (maxmin) took 3 iterations and 0.0 seconds.
+Starting Prob1 (maxmin)...
+Prob1 (maxmin) took 3 iterations and 0.0 seconds.
+target=1, yes=3, no=0, maybe=0
+Starting value iteration (maxmin)...
+Value iteration (maxmin) took 1 iterations and 0.0 seconds.
+Probabilistic reachability took 0.0 seconds.
+
+Property satisfied in 1 of 1 initial states.
+
+Time for model checking: 0.002 seconds.
+
+Result: true (property satisfied in the initial state)
+
+---------------------------------------------------------------------
+
+Model checking: <<p1>>P>=1 [ F x=2 ]
+
+Starting probabilistic reachability...
+Starting Prob0 (maxmin)...
+Prob0 (maxmin) took 3 iterations and 0.0 seconds.
+target=1, yes=1, no=0, maybe=2
+Starting value iteration (maxmin)...
+Value iteration (maxmin) took 3 iterations and 0.002 seconds.
+Probabilistic reachability took 0.002 seconds.
+
+Property satisfied in 1 of 1 initial states.
+
+Time for model checking: 0.002 seconds.
+
+Result: true (property satisfied in the initial state)
+
+---------------------------------------------------------------------
+
+Model checking: <<p1>>P>=1 [ F<=3 x=2 ]
+
+Starting bounded probabilistic reachability...
+Bounded probabilistic reachability (maxmin) took 3 iterations and 0.0 seconds.
+
+Property satisfied in 1 of 1 initial states.
+
+Time for model checking: 0.0 seconds.
+
+Result: true (property satisfied in the initial state)
+
+---------------------------------------------------------------------
+
+Model checking: <<p1>>P>=1 [ F<=3 x=2 ]
+
+Starting bounded probabilistic reachability...
+Bounded probabilistic reachability (maxmin) took 3 iterations and 0.0 seconds.
+
+Property satisfied in 1 of 1 initial states.
+
+Time for model checking: 0.001 seconds.
+
+Result: true (property satisfied in the initial state)

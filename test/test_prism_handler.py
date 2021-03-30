@@ -23,7 +23,7 @@ class PrismHandlerTest(unittest.TestCase):
         lasso_prop = '<<p1>>P>=1 [ G (<<p1>>P>=1 [ F \"a\"])]'              # player 1 can infinitely often reach state2
         coop_lasso_prop = '<<p1,p2>>P>=1 [ G (<<p1,p2>>P>=1 [ F \"a\"])]'   # together, they can reach 2 infinitely
         # load test_game2
-        self.prism_handler.load_model_file('../test/examples/test-game2.prism', test=True)
+        self.prism_handler.load_model_file('../test/examples/test-game.prism', test=True)
 
         # player 1 should be able to reach state 2 from state 0, but not from state 4
         result = self.prism_handler.check_bool_property(reach_prop)
@@ -40,3 +40,10 @@ class PrismHandlerTest(unittest.TestCase):
         result = self.prism_handler.check_bool_property(coop_lasso_prop)
         self.assertEqual(len(result), 5)
         self.assertTrue(result[0])
+
+    def test_synthesize_strategy(self):
+        reach_prop = '<< p1 >> P>=1 [F \"a\"]'
+        self.prism_handler.load_model_file('../test/examples/simple-game.prism', test=True)
+        strat = self.prism_handler.synthesize_strategy(reach_prop)
+        print(strat.getInfo())
+        print(strat.getNextMove(0))

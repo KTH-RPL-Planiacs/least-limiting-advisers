@@ -10,7 +10,9 @@ import prism.PrismDevNullLog;
 import prism.PrismException;
 import prism.PrismLog;
 import prism.Result;
+import prism.PrismSettings;
 import prism.UndefinedConstants;
+import strat.Strategy;
 
 public class PrismHandler {
 
@@ -56,6 +58,7 @@ public class PrismHandler {
             try {
                 // Model check a property specified as a string
                 System.out.println("Checking property " + property);
+                prism.getSettings().set(PrismSettings.PRISM_GENERATE_STRATEGY, false);
                 Result result = prism.modelCheck(property);
                 int resultSize = result.getVector().getSize();
                 resultArray = new boolean[resultSize];
@@ -75,6 +78,7 @@ public class PrismHandler {
 		try {
 			// Model check a property specified as a string
 			System.out.println("Checking property " + property);
+			prism.getSettings().set(PrismSettings.PRISM_GENERATE_STRATEGY, false);
 			Result result = prism.modelCheck(property);
 			int resultSize = result.getVector().getSize();
 			resultArray = new double[resultSize];
@@ -88,4 +92,21 @@ public class PrismHandler {
 		}
 		return resultArray;
 	}
+
+	public Strategy synthesizeStrategy(String property) {
+        Strategy strat = null;
+            try {
+                // Model check a property specified as a string
+                System.out.println("Synthesizing strategy for " + property);
+                prism.setGenStrat(true);
+                prism.getSettings().set(PrismSettings.PRISM_GENERATE_STRATEGY, true);
+                Result result = prism.modelCheck(property);
+                strat = result.getStrategy();
+                prism.getBuiltModelExplicit().exportToDotFile("output.dot");
+            } catch (PrismException e) {
+                System.out.println("Error: " + e.getMessage());
+                System.exit(1);
+            }
+            return strat;
+        }
 }

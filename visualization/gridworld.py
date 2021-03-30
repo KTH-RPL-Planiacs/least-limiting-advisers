@@ -1,12 +1,10 @@
 import pygame
 import time
-from copy import deepcopy
 
 
 class GridWorld:
 
-    def __init__(self, screen_size, cell_width,
-                 cell_height, cell_margin, init, goal, grid):
+    def __init__(self, grid, screen_size=500, cell_width=45, cell_height=45, cell_margin=5):
 
         # define colors
         self.BLACK = (0, 0, 0)
@@ -22,6 +20,15 @@ class GridWorld:
         self.MARGIN = cell_margin
         self.color = self.WHITE
 
+        # grid info
+        self.grid = grid
+
+        # simulation speed
+        self.FPS = 60       # frames per second
+        self.SPEED = 10     # frames per move
+        self.clock = pygame.time.Clock()
+        self.frame_count = 0
+
         pygame.init()
         pygame.font.init()
 
@@ -30,26 +37,36 @@ class GridWorld:
         self.screen = pygame.display.set_mode(self.size)
 
         self.font = pygame.font.SysFont('arial', 20)
-
         pygame.display.set_caption("Grid world")
 
-        self.clock = pygame.time.Clock()
+    def text_objects(self, text, font):
+        text_surface = font.render(text, True, self.BLACK)
+        return text_surface, text_surface.get_rect()
 
-        self.init = init
-        self.goal = goal
-        self.grid = grid
-        self.path = []
-        self.frame_count = 0
+    def draw_cell(self, nodes):
+        for node in nodes:
+            row = node[1][0]
+            column = node[1][1]
+            value = node[0]
+            pygame.draw.rect(self.screen,
+                             self.BLUE,
+                             [(self.MARGIN + self.WIDTH) * column + self.MARGIN,
+                              (self.MARGIN + self.HEIGHT) * row + self.MARGIN,
+                              self.WIDTH,
+                              self.HEIGHT])
+            text_surf, text_rect = self.text_objects(str(value), self.font)
+            text_rect.center = ((self.MARGIN + self.WIDTH) * column + 4 * self.MARGIN,
+                                (self.MARGIN + self.HEIGHT) * row + 4 * self.MARGIN)
+            self.screen.blit(text_surf, text_rect)
 
+    def render(self):
+        # black the whole screen
         self.screen.fill(self.BLACK)
 
-        for row in range(len(grid)):
-            for col in range(len(grid[0])):
-                if [row, col] == self.init:
-                    self.color = self.GREEN
-                elif [row, col] == self.goal:
-                    self.color = self.RED
-                elif grid[row][col] == 1:
+        # draw the grid
+        for row in range(len(self.grid)):
+            for col in range(len(self.grid[0])):
+                if self.grid[row][col] == 1:
                     self.color = self.BLACK
                 else:
                     self.color = self.WHITE
@@ -59,77 +76,18 @@ class GridWorld:
                                   (self.MARGIN + self.HEIGHT) * row + self.MARGIN,
                                   self.WIDTH,
                                   self.HEIGHT])
-
-    def text_objects(self, text, font):
-        textSurface = font.render(text, True, self.BLACK)
-        return textSurface, textSurface.get_rect()
-
-    def draw_cell(self, nodes):
-        for node in nodes:
-            row = node[1][0]
-            column = node[1][1]
-            value = node[0]
-            rect = pygame.draw.rect(self.screen,
-                                    self.BLUE,
-                                    [(self.MARGIN + self.WIDTH) * column + self.MARGIN,
-                                     (self.MARGIN + self.HEIGHT) * row + self.MARGIN,
-                                     self.WIDTH,
-                                     self.HEIGHT])
-            TextSurf, TextRect = self.text_objects(str(value), self.font)
-            TextRect.center = ((self.MARGIN + self.WIDTH) * column + 4 * self.MARGIN,
-                               (self.MARGIN + self.HEIGHT) * row + 4 * self.MARGIN)
-            self.screen.blit(TextSurf, TextRect)
-
-    def draw_shape(self, shape, center, size):
-        origin = [0 + 1 * self.MARGIN + 22.5, 0 + 1 * self.MARGIN + 22.5]
-        col = self.MARGIN + self.WIDTH
-        row = self.MARGIN + self.HEIGHT
-        if shape == "circle":
-            pygame.draw.circle(self.screen, self.RED,
-                               (int(origin[1] + row * (center[1])), int(origin[0] + col * (center[0]))), size)
-
-    def draw_path(self, path):
-        origin = [0 + 1 * self.MARGIN + 22.5, 0 + 1 * self.MARGIN + 22.5]
-        col = self.MARGIN + self.WIDTH
-        row = self.MARGIN + self.HEIGHT
-        pygame.draw.lines(self.screen, self.GREEN, False,
-                          [(origin[0] + col * i[1], origin[1] + row * i[0]) for i in path], 4)
-
-    # smoothen the path
-    def smooth_path(self, path, weight_data=0.5, weight_smooth=0.1, tolerance=0.000001):
-        # newpath = return_path
-        newpath = deepcopy(path)
-        change = tolerance
-        while change >= tolerance:
-            change = 0
-            for i in range(1, len(path) - 1):
-                for j in range(len(path[0])):
-                    d1 = weight_data * (path[i][j] - newpath[i][j])
-                    d2 = weight_smooth * (newpath[i - 1][j] + newpath[i + 1][j] - 2 * newpath[i][j])
-                    change += abs(d1 + d2)
-                    newpath[i][j] += d1 + d2
-
-        return newpath
-
-    def show(self):
+        # flip the renderer buffer
         pygame.display.flip()
 
-    def idle(self, ms):
+    def idle(self, idle_time):
         pass
 
     def run_frame(self):
         self.frame_count += 1
-        if self.path and self.frame_count >= 20:
+        if self.frame_count >= self.SPEED:
             self.frame_count = 0
-            point = self.path.pop(0)
-            self.draw_shape("circle", point, 8)
         self.clock.tick()
-        self.show()
-
-    def insert_path(self, path):
-        smooth_path = self.smooth_path(path)
-        self.path = smooth_path
-        self.draw_path(smooth_path)
+        self.render()
 
     def loop(self):
         next_time = time.time()
@@ -145,7 +103,20 @@ class GridWorld:
                     running = False
             # handle game state
             now_time = time.time()
-            self.idle(max(0., next_time - now_time - 1))
+            self.idle(max(0., next_time - now_time))
             if now_time >= next_time:
                 self.run_frame()
-                next_time = now_time + (1 / 60)
+                next_time = now_time + (1 / self.FPS)
+
+
+if __name__ == '__main__':
+    # build grid structure
+    ex_grid = [[0 for col in range(10)] for row in range(10)]
+    ex_grid[0][1] = 1  # obstacle
+    ex_grid[1][1] = 1  # obstacle
+    ex_grid[2][1] = 1  # obstacle
+    ex_grid[3][1] = 1  # obstacle
+    ex_grid[4][4] = 1  # obstacle
+
+    gridworld = GridWorld(grid=ex_grid)
+    gridworld.loop()

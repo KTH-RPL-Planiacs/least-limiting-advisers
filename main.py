@@ -103,6 +103,11 @@ class AdviserFramework:
             print('Adviser Computation successful, all agents have a winning strategy yielding all advisers!')
         print('Total time elapsed:', time.time() - abs_start_time)
 
+        for agent in self.agents:
+            prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
+            self.prism_handler.load_model_file(prism_model)
+            self.prism_handler.synthesize_strategy('<< p1 >> P>=1 [F \"accept\"]')
+
     def create_synth_games(self):
         start_time = time.time()
         for agent in self.agents:

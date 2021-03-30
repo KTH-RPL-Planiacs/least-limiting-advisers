@@ -1,11 +1,5 @@
-import sys
-import networkx as nx
-
-
 def dfs(graph, node, prob, reach_dict, path=''):
     if graph.nodes[node]['player'] != 0:
-        # if node in reach_dict.keys():
-        #     print(path)
         assert node not in reach_dict.keys(), 'multiple probabilistic paths to the same state!' + str(node)
         reach_dict[node] = prob
         return
@@ -16,33 +10,14 @@ def dfs(graph, node, prob, reach_dict, path=''):
 
 
 def write_prism_model(synth, name=''):
-
     file_name = 'data/%s.prism' % name
-    prism_file = open(file_name, 'w')
-    # Header
-    prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n')
-    prism_file.write('\n')
-    prism_file.write('smg \n')
-    prism_file.write('\n')
-    # player blocks
-    prism_file.write('player p1 \n')
-    prism_file.write('  [p1] \n')
-    prism_file.write('endplayer \n')
-    prism_file.write('\n')
-    prism_file.write('player p2 \n')
-    prism_file.write('  [p2] \n')
-    prism_file.write('endplayer \n')
-    prism_file.write('\n')
-    # module
-    prism_file.write('module %s \n' % name)
-    # number of states excludes probabilistic extra states
+    p1_actions = []
+    p2_actions = []
+    transitions = ''
+    # number of states excludes probabilistic states
     num_states = sum(n[1]['player'] != 0 for n in synth.nodes(data=True)) - 1
-    prism_file.write('  x : [0..%i] init 0;\n' % num_states)
-    prism_file.write('\n')
-
     state_id = 1
     state_ids = {}
-
     synth_init = synth.graph['init']
     state_ids[synth_init] = 0
 
@@ -60,7 +35,14 @@ def write_prism_model(synth, name=''):
 
         # each successor represents a choice
         for succ in synth.successors(node):
-            transition_str = '  [p%i] x=%i -> ' % (synth.nodes[node]['player'], node_id)
+            if synth.nodes[node]['player'] == 1:
+                action_guard = '[p1_%i_%s]' % (node_id, synth.edges[node, succ]['act'])
+                p1_actions.append(action_guard)
+            else:
+                # TODO: make p2 action guards unique!
+                action_guard = '[p2_%i]' % node_id
+                p2_actions.append(action_guard)
+            transition_str = '  %s x=%i -> ' % (action_guard, node_id)
             reach_dict = {}
             # depth-first-search for path through probabilistic states
             dfs(synth, succ, 1, reach_dict)
@@ -72,11 +54,7 @@ def write_prism_model(synth, name=''):
                 reach_node_id = state_ids[reach_node]
                 transition_str += '%f : (x\'=%i) + ' % (reach_prob, reach_node_id)
             transition_str = transition_str[:-3] + ';\n'
-            prism_file.write(transition_str)
-
-    prism_file.write('\n')
-    prism_file.write('endmodule \n')
-    prism_file.write('\n')
+            transitions += transition_str
 
     assert len(synth.graph['acc']) > 0, '<write_prism_model> There are no accepting states!'
 
@@ -85,7 +63,34 @@ def write_prism_model(synth, name=''):
         acc_id = state_ids[acc_state]
         reach_cond += 'x=%i | ' % acc_id
     reach_cond = reach_cond[:-3] + ')'
-    prism_file.write('label "accept" = %s ;\n' % reach_cond)
+
+    # actually write the file
+    prism_file = open(file_name, 'w')
+
+    # Header
+    prism_file.write('//synthesis game in PRISM-games language, generated from networkx digraph model \n\n')
+    prism_file.write('smg \n\n')
+
+    # player 1
+    prism_file.write('player p1 \n')
+    for action in p1_actions:
+        prism_file.write('  ' + action + '\n')
+    prism_file.write('endplayer \n\n')
+
+    # player 2
+    prism_file.write('player p2 \n')
+    for action in p2_actions:
+        prism_file.write('  ' + action + '\n')
+    prism_file.write('endplayer \n\n')
+
+    # label accepting states
+    prism_file.write('label "accept" = %s ;\n\n' % reach_cond)
+
+    # module
+    prism_file.write('module %s \n' % name)
+    prism_file.write('  x : [0..%i] init 0;\n\n' % num_states)
+    prism_file.write(transitions + '\n')
+    prism_file.write('endmodule \n\n')
 
     prism_file.close()
 

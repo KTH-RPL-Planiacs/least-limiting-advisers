@@ -1,0 +1,25 @@
+smg
+
+player p1
+    [p1_0_1],
+    [p1_0_2]
+endplayer
+
+player p2
+    [p2_1_0],
+    [p2_2_0]
+endplayer
+
+module strat_test
+
+    x : [0..6] init 0;
+
+    [p1_0_1] x=0 -> (x'=1);
+    [p1_0_2] x=0 -> (x'=2);
+
+    [p2_1_0] x=1 -> (x'=0);
+    [p2_2_0] x=2 -> (x'=0);
+
+endmodule
+
+

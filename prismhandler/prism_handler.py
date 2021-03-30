@@ -27,3 +27,7 @@ class PrismHandler:
     def check_bool_property(self, property_string):
         result = self.prism_handler.checkBoolProperty(property_string)
         return pythonify(result)
+
+    def synthesize_strategy(self, property_string):
+        strat = self.prism_handler.synthesizeStrategy(property_string)
+        return strat
