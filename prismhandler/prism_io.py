@@ -34,13 +34,12 @@ def write_prism_model(synth, name=''):
         node_id = state_ids[node]
 
         # each successor represents a choice
-        for succ in synth.successors(node):
+        for i, succ in enumerate(synth.successors(node)):
             if synth.nodes[node]['player'] == 1:
                 action_guard = '[p1_%i_%s]' % (node_id, synth.edges[node, succ]['act'])
                 p1_actions.append(action_guard)
             else:
-                # TODO: make p2 action guards unique!
-                action_guard = '[p2_%i]' % node_id
+                action_guard = '[p2_%i_%i]' % (node_id, i)
                 p2_actions.append(action_guard)
             transition_str = '  %s x=%i -> ' % (action_guard, node_id)
             reach_dict = {}
