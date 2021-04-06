@@ -65,6 +65,7 @@ class AgentSynthGame:
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
+        self.strategy = {}
 
     def get_spec_formula(self):
         """

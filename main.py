@@ -101,12 +101,10 @@ class AdviserFramework:
         winnable = self.check_winnable()
         if all(winnable):
             print('Adviser Computation successful, all agents have a winning strategy yielding all advisers!')
-        print('Total time elapsed:', time.time() - abs_start_time)
+        print('Total time elapsed:', time.time() - abs_start_time, '\n')
 
-        for agent in self.agents:
-            prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
-            self.prism_handler.load_model_file(prism_model)
-            self.prism_handler.synthesize_strategy('<< p1 >> P>=1 [F \"accept\"]')
+        print('Computing Strategies...')
+        self.create_strategies()
 
     def create_synth_games(self):
         start_time = time.time()
@@ -136,6 +134,28 @@ class AdviserFramework:
         if verbose:
             print('')
         return results
+
+    def create_strategies(self):
+        for agent in self.agents:
+            prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
+            self.prism_handler.load_model_file(prism_model)
+            strat = self.prism_handler.synthesize_strategy(path='../data/'+agent.name+'.strat',
+                                                           property_string='<< p1 >> P>=1 [F \"accept\"]')
+
+            # remove player-2 recommendations from the strategy
+            for state, state_id in state_ids.items():
+                if agent.synth.nodes[state]['player'] != 1:
+                    strat.pop(str(state_id), None)
+
+            # save the strategy for the agent, but replace the state_ids with real state names
+            agent.strategy = {}
+            # this is okay because the mapping is unique in both directions
+            inv_state_ids = {v: k for k, v in state_ids.items()}
+            for state_id, act in strat.items():
+                state = inv_state_ids[int(state_id)]
+                action = act.split('_')
+                agent.strategy[state] = action[2]
+            print(agent.strategy)
 
     def compute_and_exchange_fairness(self):
         fairness_changed = False
@@ -181,8 +201,10 @@ class AdviserFramework:
 
 if __name__ == '__main__':
 
-    agents_list = [AgentSynthGame(mdp=corridor_no_turn_mdp('A', init_state='end_top'), formula='F(eba) & G!(crita && critb)'),
-                   AgentSynthGame(mdp=corridor_no_turn_mdp('B', init_state='end_bot'), formula='F(etb) & G!(crita && critb)')]
+    agents_list = [AgentSynthGame(mdp=corridor_no_turn_mdp('A', init_state='end_top'),
+                                  formula='F(eba) & G!(crita && critb)'),
+                   AgentSynthGame(mdp=corridor_no_turn_mdp('B', init_state='end_bot'),
+                                  formula='F(etb) & G!(crita && critb)')]
 
     framework = AdviserFramework(agents_list)
     framework.complete_strategy_synthesis(verbose=True)
