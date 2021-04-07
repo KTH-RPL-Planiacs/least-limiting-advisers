@@ -28,6 +28,15 @@ class PrismHandler:
         result = self.prism_handler.checkBoolProperty(property_string)
         return pythonify(result)
 
-    def synthesize_strategy(self, property_string):
+    def synthesize_strategy(self, path, property_string):
         strat = self.prism_handler.synthesizeStrategy(property_string)
-        return strat
+        # strat.exportToFile(path)
+        # strat.getNextMove(0)
+        # TODO: ugly, but works. fix later
+        strategy = {}
+        f = open('prismhandler/adv.tra', 'r')
+        for line in f:
+            split_line = line.split()
+            if len(split_line) == 2:
+                strategy[split_line[0]] = split_line[1]
+        return strategy

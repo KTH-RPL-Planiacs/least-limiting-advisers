@@ -1,10 +1,11 @@
 import pygame
 import time
+import pickle
 
 
 class GridWorld:
 
-    def __init__(self, grid, screen_size=500, cell_width=45, cell_height=45, cell_margin=5):
+    def __init__(self, grid, screen_x=500, screen_y=500, cell_margin=5):
 
         # define colors
         self.BLACK = (0, 0, 0)
@@ -15,25 +16,25 @@ class GridWorld:
         self.YELLOW = (255, 255, 0)
 
         # cell dimensions
-        self.WIDTH = cell_width
-        self.HEIGHT = cell_height
+        self.WIDTH = int((screen_x / len(grid[0])) - cell_margin)
+        self.HEIGHT = int((screen_y / len(grid)) - cell_margin)
         self.MARGIN = cell_margin
         self.color = self.WHITE
 
         # grid info
         self.grid = grid
+        self.cell_count = 0
 
         # simulation speed
         self.FPS = 60       # frames per second
         self.SPEED = 10     # frames per move
-        self.clock = pygame.time.Clock()
         self.frame_count = 0
 
         pygame.init()
         pygame.font.init()
 
         # set the width and height of the screen (width , height)
-        self.size = (screen_size, screen_size)
+        self.size = (screen_x, screen_y)
         self.screen = pygame.display.set_mode(self.size)
 
         self.font = pygame.font.SysFont('arial', 20)
@@ -68,6 +69,8 @@ class GridWorld:
             for col in range(len(self.grid[0])):
                 if self.grid[row][col] == 1:
                     self.color = self.BLACK
+                elif self.grid[row][col] == 2:
+                    self.color = self.BLUE
                 else:
                     self.color = self.WHITE
                 pygame.draw.rect(self.screen,
@@ -86,7 +89,9 @@ class GridWorld:
         self.frame_count += 1
         if self.frame_count >= self.SPEED:
             self.frame_count = 0
-        self.clock.tick()
+            if self.cell_count < len(self.grid):
+                self.grid[self.cell_count][self.cell_count] = 2
+            self.cell_count += 1
         self.render()
 
     def loop(self):
@@ -110,13 +115,12 @@ class GridWorld:
 
 
 if __name__ == '__main__':
-    # build grid structure
-    ex_grid = [[0 for col in range(10)] for row in range(10)]
-    ex_grid[0][1] = 1  # obstacle
-    ex_grid[1][1] = 1  # obstacle
-    ex_grid[2][1] = 1  # obstacle
-    ex_grid[3][1] = 1  # obstacle
-    ex_grid[4][4] = 1  # obstacle
+    agents = pickle.load(open('../data/agents_converged_results.p', 'rb'))
 
-    gridworld = GridWorld(grid=ex_grid)
+    # build grid structure
+    ex_grid = [[1 for col in range(5)] for row in range(5)]
+    for i in range(5):
+        ex_grid[2][i] = 0
+
+    gridworld = GridWorld(grid=ex_grid, screen_x=500, screen_y=500)
     gridworld.loop()

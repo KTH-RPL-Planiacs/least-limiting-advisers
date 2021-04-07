@@ -3,6 +3,9 @@ test/data/*
 data/*
 .vscode/*
 
+# ignore prism-generated files
+prismhandler/*.tra
+
 # all java .class files
 *.class
 

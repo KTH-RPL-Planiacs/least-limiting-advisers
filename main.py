@@ -1,5 +1,6 @@
 import time
 import sys
+import pickle
 
 from py4j.protocol import Py4JNetworkError
 
@@ -103,16 +104,19 @@ class AdviserFramework:
             print('Adviser Computation successful, all agents have a winning strategy yielding all advisers!')
         print('Total time elapsed:', time.time() - abs_start_time, '\n')
 
-        print('Computing Strategies...')
+        print('Computing Strategies...\n')
         self.create_strategies()
+
+        print('Pickling results...\n')
+        pickle.dump(self.agents, open('data/agents_converged_results.p', 'wb'))
 
     def create_synth_games(self):
         start_time = time.time()
         for agent in self.agents:
-            agent.create_dfa(self.ltlf_parser)          # update spec according to other safety advisers and create DFA
-            agent.create_synthesis_game()               # create synthesis game
+            agent.create_dfa(self.ltlf_parser)  # update spec according to other safety advisers and create DFA
+            agent.create_synthesis_game()  # create synthesis game
             agent.modify_game_own_advisers()  # modify game according to own safety and fairness advisers
-            result = agent.modify_game_other_fairness()          # modify game according to fairness advisers from other agents
+            result = agent.modify_game_other_fairness()  # modify game according to fairness advisers from other agents
             agent.prune_unreachable_states()
             if not result:
                 print('Agent', agent.name, 'cannot fulfill all fairness constraints. Negotiation failed.')
@@ -139,7 +143,7 @@ class AdviserFramework:
         for agent in self.agents:
             prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
             self.prism_handler.load_model_file(prism_model)
-            strat = self.prism_handler.synthesize_strategy(path='../data/'+agent.name+'.strat',
+            strat = self.prism_handler.synthesize_strategy(path='../data/' + agent.name + '.strat',
                                                            property_string='<< p1 >> P>=1 [F \"accept\"]')
 
             # remove player-2 recommendations from the strategy
@@ -200,7 +204,6 @@ class AdviserFramework:
 
 
 if __name__ == '__main__':
-
     agents_list = [AgentSynthGame(mdp=corridor_no_turn_mdp('A', init_state='end_top'),
                                   formula='F(eba) & G!(crita && critb)'),
                    AgentSynthGame(mdp=corridor_no_turn_mdp('B', init_state='end_bot'),
