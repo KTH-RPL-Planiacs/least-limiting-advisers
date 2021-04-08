@@ -3,6 +3,8 @@ import time
 import pickle
 import random
 
+from agent_synth_game import sog_fits_to_guard
+
 
 class RobotView(pygame.sprite.Sprite):
 
@@ -123,7 +125,10 @@ class GridWorld:
         # update robot views
         for robot_id, robot in enumerate(self.robots):
             robot_view = self.robot_views[robot_id]
-            current_coords = states_dict[robot.current_state[0]]
+            if isinstance(robot.current_state[0], tuple):
+                current_coords = states_dict[robot.current_state[0][0]]
+            else:
+                current_coords = states_dict[robot.current_state[0]]
             displace_x = ((self.WIDTH + self.MARGIN)/2) - (robot_view.rect.width / 2)
             displace_y = ((self.HEIGHT + self.MARGIN) / 2) - (robot_view.rect.height / 2)
             robot_view.rect.x = current_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
@@ -137,12 +142,17 @@ class GridWorld:
         next_ap = []
         for robot in self.robots:
             # start in a player-1 state
-            mpd_state = robot.current_state[0]
+            if isinstance(robot.current_state[0], tuple):
+                # its a promise node
+                mpd_state = robot.current_state[0][0]
+            else:
+                mpd_state = robot.current_state[0]
             action = robot.strategy[robot.current_state]
             prob_state = None
             for succ in robot.mdp.successors(mpd_state):
                 if robot.mdp.edges[mpd_state, succ]['act'] == action:
                     prob_state = succ
+                    break
 
             # compute probabilistic outcome of mdp action
             outcomes = []
@@ -151,10 +161,45 @@ class GridWorld:
                 outcomes.append(succ)
                 probs.append(robot.mdp.edges[prob_state, succ]['prob'])
             choice = random.choices(outcomes, probs)[0]
+            robot.mdp_choice = choice
+
             next_obs += robot.mdp.nodes[choice]['ap'][0]
             next_ap.extend(robot.mdp.graph['ap'])
 
-        # now we have player-2 choices
+        # now we have player-2 choices, now move the synth game
+        for robot in self.robots:
+            action = robot.strategy[robot.current_state]
+            p2_state = None
+            for succ in robot.synth.successors(robot.current_state):
+                if robot.synth.edges[robot.current_state, succ]['act'] == action:
+                    p2_state = succ
+                    break
+            # find the p2 action that matches the next_obs, next_ap
+            # first, skip fairness nodes
+            if len(p2_state) == 3 and p2_state[2] == 'fair':
+                p2_state = (p2_state[0], p2_state[1])
+            prob_state = None
+            for succ in robot.synth.successors(p2_state):
+                sog = robot.synth.edges[p2_state, succ]['guards']
+                matched_guards = sog_fits_to_guard(next_obs, sog, next_ap, robot.synth.graph['env_ap'])
+                if len(matched_guards) > 0:
+                    prob_state = succ
+                    break
+            # make the choice decided probabilistically earlier in mdp
+            for succ in robot.synth.successors(prob_state):
+                if succ[1] == 'promise' and succ[0][0] == robot.mdp_choice:
+                    # check probabilistically if we need to fulfill a promise
+                    promise_state = succ
+                    outcomes = []
+                    probs = []
+                    for succsucc in robot.synth.successors(promise_state):
+                        outcomes.append(succsucc)
+                        probs.append(robot.synth.edges[promise_state, succsucc]['prob'])
+                    robot.current_state = random.choices(outcomes, probs)[0]
+
+                elif succ[0] == robot.mdp_choice:
+                    robot.current_state = succ
+                    break
 
     def simulate_agents(self, states_dict):
         next_time = time.time()
