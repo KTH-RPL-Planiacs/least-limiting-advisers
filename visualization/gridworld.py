@@ -2,6 +2,7 @@ import pygame
 import time
 import pickle
 import random
+from advisers import AdviserType
 
 from agent_synth_game import sog_fits_to_guard
 
@@ -119,8 +120,11 @@ class GridWorld:
     def run_step(self, states_dict):
         self.frame_count += 1
         if self.frame_count >= self.SPEED:
+            for robot in self.robots:
+                robot.current_state = robot.next_state
+
             self.frame_count = 0
-            self.simulate_step()
+            self.compute_next_step()
 
         # update robot views
         for robot_id, robot in enumerate(self.robots):
@@ -129,15 +133,28 @@ class GridWorld:
                 current_coords = states_dict[robot.current_state[0][0]]
             else:
                 current_coords = states_dict[robot.current_state[0]]
+            if isinstance(robot.next_state[0], tuple):
+                next_coords = states_dict[robot.next_state[0][0]]
+            else:
+                next_coords = states_dict[robot.next_state[0]]
+
             displace_x = ((self.WIDTH + self.MARGIN)/2) - (robot_view.rect.width / 2)
             displace_y = ((self.HEIGHT + self.MARGIN) / 2) - (robot_view.rect.height / 2)
-            robot_view.rect.x = current_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
-            robot_view.rect.y = current_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
+            current_posx = current_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
+            current_posy = current_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
+            next_posx = next_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
+            next_posy = next_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
+
+            t = self.frame_count / self.SPEED
+            t = t * t * (3 - 2 * t);
+
+            robot_view.rect.x = current_posx * (1 - t) + next_posx * t
+            robot_view.rect.y = current_posy * (1 - t) + next_posy * t
 
         # render the results
         self.render()
 
-    def simulate_step(self):
+    def compute_next_step(self):
         next_obs = ''
         next_ap = []
         for robot in self.robots:
@@ -193,31 +210,40 @@ class GridWorld:
                     outcomes = []
                     probs = []
                     for succsucc in robot.synth.successors(promise_state):
-                        outcomes.append(succsucc)
-                        probs.append(robot.synth.edges[promise_state, succsucc]['prob'])
-                    robot.current_state = random.choices(outcomes, probs)[0]
+                        edge_data = robot.synth.edges[promise_state, succsucc]
+                        if 'pre' in edge_data.keys():
+                            fits = sog_fits_to_guard(next_obs, [edge_data['pre'][0]], next_ap, edge_data['pre'][1])
+                            if len(fits) > 0:
+                                outcomes.append(succsucc)
+                        else:
+                            outcomes.append(succsucc)
+                    robot.next_state = random.choice(outcomes)
 
                 elif succ[0] == robot.mdp_choice:
-                    robot.current_state = succ
+                    robot.next_state = succ
                     break
 
     def simulate_agents(self, states_dict):
         next_time = time.time()
 
         running = True
+        simulate = False
         while running:
             # handle all events
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:            # hit a key
                     if event.key == pygame.K_ESCAPE:        # ESC key
                         running = False
+                    if event.key == pygame.K_SPACE:
+                        simulate = True
                 elif event.type == pygame.QUIT:             # press X in window
                     running = False
             # handle game state
             now_time = time.time()
             self.idle(max(0., next_time - now_time))
             if now_time >= next_time:
-                self.run_step(states_dict)
+                if simulate:
+                    self.run_step(states_dict)
                 next_time = now_time + (1 / self.FPS)
 
 
@@ -243,5 +269,24 @@ if __name__ == '__main__':
     for agent in pickled_agents:
         agent.current_state = agent.synth.graph['init']
 
+    # safety print
+    for agent in pickled_agents:
+        print('Safety Advisers for Agent %s:' % agent.name)
+        for adviser in agent.own_advisers:
+            if not adviser.adv_type == AdviserType.SAFETY:
+                continue
+
+            adviser.print_advice()
+        print('')
+    # fairness print
+    for agent in pickled_agents:
+        print('Fairness Advisers for Agent %s:' % agent.name)
+        for adviser in agent.own_advisers:
+            if not adviser.adv_type == AdviserType.FAIRNESS:
+                continue
+            adviser.print_advice()
+        print('')
+
     gridworld = GridWorld(grid=ex_grid, robots=pickled_agents, screen_x=500, screen_y=500)
+    gridworld.compute_next_step()
     gridworld.simulate_agents(mdp_states_dict)
