@@ -28,6 +28,10 @@ class PrismHandler:
         result = self.prism_handler.checkBoolProperty(property_string)
         return pythonify(result)
 
+    def check_quant_property(self, property_string):
+        result = self.prism_handler.checkQuantProperty(property_string)
+        return pythonify(result)
+
     def synthesize_strategy(self, path, property_string):
         strat = self.prism_handler.synthesizeStrategy(property_string)
         # strat.exportToFile(path)

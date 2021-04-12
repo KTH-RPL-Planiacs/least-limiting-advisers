@@ -48,13 +48,13 @@ def construct_fair_game(synth, fairness_edges):
 
 def minimal_fairness_edges(synth, name, prism_handler, test=False):
     # check if fairness is necessary
-    win_prop = '<< p1 >> P>=1 [F \"accept\"]'
+    win_prop = '<< p1 >> Pmax=? [F \"accept\"]'
     # PRISM translations
     prism_model, state_ids = write_prism_model(synth, name + '_safe')
     prism_handler.load_model_file(prism_model, test=test)
-    result = prism_handler.check_bool_property(win_prop)
+    result = prism_handler.check_quant_property(win_prop)
 
-    if result[0]:
+    if result[0] >= 0.999:
         return []
 
     # fairness is necessary
@@ -66,9 +66,9 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
     # PRISM translations
     prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
     prism_handler.load_model_file(prism_model, test=test)
-    result = prism_handler.check_bool_property(win_prop)
+    result = prism_handler.check_quant_property(win_prop)
 
-    winnable = result[state_ids[assume_fair_synth.graph['init']]]
+    winnable = result[state_ids[assume_fair_synth.graph['init']]] >= 0.999
 
     if not winnable:
         return None     # no safety assumption will work
@@ -87,10 +87,10 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
             # PRISM translations
             prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
             prism_handler.load_model_file(prism_model, test=test)
-            result = prism_handler.check_bool_property(win_prop)
+            result = prism_handler.check_quant_property(win_prop)
 
             # check if the chosen edge is removable
-            if result[state_ids[assume_fair_synth.graph['init']]]:
+            if result[state_ids[assume_fair_synth.graph['init']]] > 0.999:
                 fairness_edges = selection
                 guess = int(len(fairness_edges) / 2)
             else:
@@ -106,10 +106,10 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
             # PRISM translations
             prism_model, state_ids = write_prism_model(assume_fair_synth, name + '_fairness')
             prism_handler.load_model_file(prism_model, test=test)
-            result = prism_handler.check_bool_property(win_prop)
+            result = prism_handler.check_quant_property(win_prop)
 
             # check if the chosen edge is removable
-            if result[state_ids[assume_fair_synth.graph['init']]]:
+            if result[state_ids[assume_fair_synth.graph['init']]] >= 0.999:
                 removable_edge = fair_edge
                 break
 

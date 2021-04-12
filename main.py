@@ -144,7 +144,7 @@ class AdviserFramework:
             prism_model, state_ids = write_prism_model(agent.synth, agent.name + '_win')
             self.prism_handler.load_model_file(prism_model)
             strat = self.prism_handler.synthesize_strategy(path='../data/' + agent.name + '.strat',
-                                                           property_string='<< p1 >> P>=1 [F \"accept\"]')
+                                                           property_string='<< p1 >> Pmax=? [F \"accept\"]')
 
             # remove player-2 recommendations from the strategy
             for state, state_id in state_ids.items():
