@@ -5,6 +5,8 @@ from copy import deepcopy
 from fairness_assumptions import construct_fair_game
 from advisers import AdviserType
 
+import time
+
 
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
 def group_and_flip(d):
@@ -60,12 +62,16 @@ class AgentSynthGame:
     def __init__(self, mdp, formula, name='agent'):
         self.mdp = mdp
         self.spec = formula
+        self.full_spec = None
         self.dfa = None
         self.synth = nx.DiGraph()
         self.name = mdp.graph['name'] + '_' + name
         self.own_advisers = []
         self.other_advisers = []
         self.strategy = {}
+
+    def add_other_adviser(self, ssa):
+        self.other_advisers.append(ssa)
 
     def get_spec_formula(self):
         """
@@ -79,7 +85,7 @@ class AgentSynthGame:
             if not adviser.adv_type == AdviserType.SAFETY:
                 continue
 
-            safety_formulas.extend(adviser.safety_adviser_to_spec())
+            safety_formulas.extend(adviser.safety_adviser_to_spec(self.mdp.graph['ap']))
 
         f += ' & '
 
@@ -91,9 +97,15 @@ class AgentSynthGame:
         return f
 
     def create_dfa(self, parser):
-        full_spec = self.get_spec_formula()
-        parser.parse_formula(full_spec)
-        self.dfa = parser.to_nxgraph()
+        old_spec = self.full_spec
+        self.full_spec = self.get_spec_formula()
+
+        # if the new full spec is the same as before, we don't need to recompute automata
+        if old_spec != self.full_spec:
+            parser.parse_formula(self.full_specxp)
+            start_time = time.time()
+            self.dfa = parser.to_nxgraph()
+            print("DFA creation took", time.time() - start_time, "seconds.")
 
     def create_synthesis_game(self):
         assert self.dfa, '<AgentSynthGame.create_synthesis_game> set self.dfa before calling this function!'
@@ -136,6 +148,7 @@ class AgentSynthGame:
             if self.synth.nodes[synth_from]['player'] == 1:
                 # for all possible mdp moves
                 for mdp_succ in self.mdp.successors(mdp_from):
+                    #print(mdp_succ)
                     assert self.mdp.nodes[mdp_succ]['player'] == 0  # this should be a probabilistic state in the mdp
                     # add the new state to the synthesis product and connect it
                     synth_succ = (mdp_succ, dfa_from)

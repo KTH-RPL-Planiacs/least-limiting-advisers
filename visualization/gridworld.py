@@ -148,8 +148,8 @@ class GridWorld:
             t = self.frame_count / self.SPEED
             t = t * t * (3 - 2 * t);
 
-            robot_view.rect.x = current_posx * (1 - t) + next_posx * t
-            robot_view.rect.y = current_posy * (1 - t) + next_posy * t
+            robot_view.rect.x = int(current_posx * (1 - t) + next_posx * t)
+            robot_view.rect.y = int(current_posy * (1 - t) + next_posy * t)
 
         # render the results
         self.render()
@@ -248,21 +248,30 @@ class GridWorld:
 
 
 if __name__ == '__main__':
-    pickled_agents = pickle.load(open('data/agents_converged_results.p', 'rb'))
+    pickled_agents = pickle.load(open('data/agents_converged_results_symmetric_corridor.p', 'rb'))
 
     # mdp player-1-states to coords
-    mdp_states_dict = {'end_top':               (2, 0),
-                       'corridor_top':          (2, 1),
-                       'corridor_top_no_turn':  (2, 1),
-                       'crit':                  (2, 2),
-                       'corridor_bot':          (2, 3),
-                       'corridor_bot_no_turn':  (2, 3),
-                       'end_bot':               (2, 4)}
+    mdp_states_dict = {
+        'crit':                 (2, 2),
+        'end_top':              (0, 2),
+        'corridor_top':         (1, 2),
+        'corridor_top_no_turn': (1, 2),
+        'corridor_bot':         (3, 2),
+        'corridor_bot_no_turn': (3, 2),
+        'end_bot':              (4, 2),
+        'end_left':             (2, 0),
+        'corridor_left':        (2, 1),
+        'corridor_left_no_turn': (2, 1),
+        'end_right':              (2, 4),
+        'corridor_right':         (2, 3),
+        'corridor_right_no_turn': (2, 3)
+    }
 
     # build grid structure
     ex_grid = [[0 for col in range(5)] for row in range(5)]
     for i in range(5):
         ex_grid[2][i] = 1
+        ex_grid[i][2] = 1
     ex_grid[2][2] = 2
 
     # set current state of agents
