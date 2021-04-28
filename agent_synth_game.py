@@ -102,7 +102,7 @@ class AgentSynthGame:
 
         # if the new full spec is the same as before, we don't need to recompute automata
         if old_spec != self.full_spec:
-            parser.parse_formula(self.full_specxp)
+            parser.parse_formula(self.full_spec)
             start_time = time.time()
             self.dfa = parser.to_nxgraph()
             print("DFA creation took", time.time() - start_time, "seconds.")
