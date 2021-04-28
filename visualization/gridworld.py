@@ -61,7 +61,7 @@ class GridWorld:
         self.robot_views = []
         self.sprites_list = pygame.sprite.Group()
         for robot_id, robot in enumerate(self.robots):
-            robot_view = RobotView(robot.name, robot_id, self.WIDTH * 0.5, self.HEIGHT * 0.5)
+            robot_view = RobotView(robot.name, robot_id, self.WIDTH * 0.6, self.HEIGHT * 0.6)
             self.robot_views.append(robot_view)
             self.sprites_list.add(robot_view)
 
@@ -146,7 +146,7 @@ class GridWorld:
             next_posy = next_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
 
             t = self.frame_count / self.SPEED
-            t = t * t * (3 - 2 * t);
+            t = t * t * (3 - 2 * t)
 
             robot_view.rect.x = current_posx * (1 - t) + next_posx * t
             robot_view.rect.y = current_posy * (1 - t) + next_posy * t
@@ -287,6 +287,6 @@ if __name__ == '__main__':
             adviser.print_advice()
         print('')
 
-    gridworld = GridWorld(grid=ex_grid, robots=pickled_agents, screen_x=500, screen_y=500)
+    gridworld = GridWorld(grid=ex_grid, robots=pickled_agents, screen_x=1000, screen_y=1000)
     gridworld.compute_next_step()
     gridworld.simulate_agents(mdp_states_dict)
