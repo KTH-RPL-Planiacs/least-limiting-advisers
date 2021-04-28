@@ -46,6 +46,12 @@ def write_prism_model(synth, name=''):
             # depth-first-search for path through probabilistic states
             dfs(synth, succ, 1, reach_dict)
 
+            if len(reach_dict) == 0:
+                print("Synth game state", succ, "has no reachable successors, this is a construction error...")
+                for succsucc in synth.successors(succ):
+                    print(succsucc)
+                continue
+
             for reach_node, reach_prob in reach_dict.items():
                 if reach_node not in state_ids.keys():
                     state_ids[reach_node] = state_id

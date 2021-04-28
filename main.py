@@ -198,16 +198,16 @@ class AdviserFramework:
                     if agent.name == other_agent.name:
                         continue
 
-                    other_agent.other_advisers.append(ssa)
+                    other_agent.add_other_adviser(ssa)
 
         return safety_changed
 
 
 if __name__ == '__main__':
-    agents_list = [AgentSynthGame(mdp=corridor_no_turn_mdp('A', init_state='end_top'),
-                                  formula='F(eba) & G!(crita && critb)'),
-                   AgentSynthGame(mdp=corridor_no_turn_mdp('B', init_state='end_bot'),
-                                  formula='F(etb) & G!(crita && critb)')]
+    agents_list_running_example = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'), formula='F(eba) & G!(crita & critb | crita && critc | crita & critd)'),
+                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='B', init_state='end_bot'), formula='F(etb) & G!(critb & crita | critb && critc | critb & critd)'),
+                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='C', init_state='end_left'), formula='F(erc) & G!(critc & crita | critc && critb | critc & critd)'),
+                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'), formula='F(eld) & G!(critd & crita | critd && critb | critd & critc)')]
 
-    framework = AdviserFramework(agents_list)
+    framework = AdviserFramework(agents_list_running_example)
     framework.complete_strategy_synthesis(verbose=True)

@@ -96,7 +96,6 @@ class LTLf2nxParser:
                 if orig_state == '0':
                     # already deleted dummy state
                     continue
-
                 if 'guard' in g.edges[orig_state, dest_state]:
                     new_guard = g.edges[orig_state, dest_state]['guard']
                     new_guard.append(guard)

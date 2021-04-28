@@ -30,7 +30,7 @@ class AdviserObject:
             print('This Adviser is not correctly initialized! '
                   'self.adv_type should be \"SAFETY\" or \"FAIRNESS\", but is:', self.adv_type)
 
-    def safety_adviser_to_spec(self):
+    def safety_adviser_to_spec(self, adv_ap_filter):
         if self.adv_type != AdviserType.SAFETY:
             print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
             return
@@ -48,18 +48,29 @@ class AdviserObject:
                     assert value == 'X', value
 
             adv_f = ''
+            overall_not_empty = False
             for adv in advs:
+                not_empty = False
                 for index, value in enumerate(adv):
+
+                    if self.adv_ap[index] not in adv_ap_filter:
+                        continue
                     if value == '1':
                         adv_f += self.adv_ap[index].lower() + ' & '
+                        not_empty = True
+                        overall_not_empty = True
                     elif value == '0':
                         adv_f += '!' + self.adv_ap[index].lower() + ' & '
+                        not_empty = True
+                        overall_not_empty = True
                     else:
                         assert value == 'X', value
-                adv_f = adv_f[0:-3] + ' | '
+                if not_empty:
+                    adv_f = adv_f[0:-3] + ' | '
 
             spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
-            safety_formulas.append(spec)
+            if overall_not_empty:
+                safety_formulas.append(spec)
 
         return safety_formulas
 
