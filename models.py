@@ -5,19 +5,19 @@ def corridor_no_turn_mdp(r_id, init_state):
     m = nx.DiGraph()
 
     # graph information
-    m.graph['name'] = 'robot'+r_id
+    m.graph['name'] = 'robot' + r_id
     m.graph['init'] = init_state
     # all uppercase required, order sensitive
-    m.graph['ap'] = ['ET'+r_id, 'CT'+r_id, 'CRIT'+r_id, 'CB'+r_id, 'EB'+r_id]
+    m.graph['ap'] = ['ET' + r_id, 'CT' + r_id, 'CRIT' + r_id, 'CB' + r_id, 'EB' + r_id]
 
     # player 1 states
-    m.add_node('end_top',       player=1, ap=['10000'])
-    m.add_node('corridor_top',  player=1, ap=['01000'])
-    m.add_node('corridor_top_no_turn',  player=1, ap=['00000'])
-    m.add_node('crit',          player=1, ap=['00100'])
-    m.add_node('corridor_bot',  player=1, ap=['00010'])
+    m.add_node('end_top', player=1, ap=['10000'])
+    m.add_node('corridor_top', player=1, ap=['01000'])
+    m.add_node('corridor_top_no_turn', player=1, ap=['00000'])
+    m.add_node('crit', player=1, ap=['00100'])
+    m.add_node('corridor_bot', player=1, ap=['00010'])
     m.add_node('corridor_bot_no_turn', player=1, ap=['00000'])
-    m.add_node('end_bot',       player=1, ap=['00001'])
+    m.add_node('end_bot', player=1, ap=['00001'])
 
     # probabilistic states
     m.add_node('end_top_s', player=0)
@@ -98,10 +98,10 @@ def intersection_no_turn_symmetric_labels_mdp(r_id, init_state):
     m = nx.DiGraph()
 
     # graph information
-    m.graph['name'] = 'robot'+r_id
+    m.graph['name'] = 'robot' + r_id
     m.graph['init'] = init_state
     # all uppercase required, order sensitive
-    m.graph['ap'] = ['ET'+r_id, 'EB'+r_id, 'EL'+r_id, 'ER'+r_id, 'C'+r_id, 'CRIT'+r_id]
+    m.graph['ap'] = ['ET' + r_id, 'EB' + r_id, 'EL' + r_id, 'ER' + r_id, 'C' + r_id, 'CRIT' + r_id]
 
     # player 1 states
     m.add_node('end_top', player=1, ap=['100000'])
@@ -272,3 +272,59 @@ def intersection_no_turn_symmetric_labels_mdp(r_id, init_state):
     m.add_edge('corridor_right_no_turn_r', 'end_right', prob=1.0)
 
     return m
+
+
+def square_grid_mdp(size, r_id, init_state):
+    m = nx.DiGraph()
+
+    # graph information
+    m.graph['name'] = 'robot' + r_id
+    m.graph['init'] = init_state
+    # all uppercase required, order sensitive
+    m.graph['ap'] = ['ap' + r_id]
+
+    # create nodes p1 and p0 and edges p1-p0
+    for x in range(size):
+        for y in range(size):
+            node_name = '%i,%i' % (x, y)
+            m.add_node(node_name, player=1, ap=['1'])
+
+            if x > 0:
+                up_name = '%i,%i_u' % (x, y)
+                m.add_node(up_name, player=0)
+                m.add_edge(node_name, up_name, act='up')
+            if x < size - 1:
+                down_name = '%i,%i_d' % (x, y)
+                m.add_node(down_name, player=0)
+                m.add_edge(node_name, down_name, act='down')
+            if y > 0:
+                left_name = '%i,%i_l' % (x, y)
+                m.add_node(left_name, player=0)
+                m.add_edge(node_name, left_name, act='left')
+            if y < size - 1:
+                right_name = '%i,%i_r' % (x, y)
+                m.add_node(right_name, player=0)
+                m.add_edge(node_name, right_name, act='right')
+
+    # create edges from probabilistic states
+    for x in range(size):
+        for y in range(size):
+            node_name = '%i,%i' % (x, y)
+            if x > 0:
+                down_name = '%i,%i_d' % (x-1, y)
+                m.add_edge(down_name, node_name, prob=1.0)
+            if x < size - 1:
+                up_name = '%i,%i_u' % (x+1, y)
+                m.add_edge(up_name, node_name, prob=1.0)
+            if y > 0:
+                right_name = '%i,%i_r' % (x, y-1)
+                m.add_edge(right_name, node_name, prob=1.0)
+            if y < size - 1:
+                left_name = '%i,%i_l' % (x, y+1)
+                m.add_edge(left_name, node_name, prob=1.0)
+
+    return m
+
+
+if __name__ == '__main__':
+    test_mdp = square_grid_mdp(10, '0', '1,1')
