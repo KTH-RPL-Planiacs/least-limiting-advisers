@@ -38,6 +38,11 @@ class AdviserFramework:
 
         if all(winnable):
             print('No adviser computation necessary, winning strategies already exists!')
+            print('Computing Strategies...\n')
+            self.create_strategies()
+
+            print('Pickling results...\n')
+            pickle.dump(self.agents, open('data/agents_converged_results.p', 'wb'))
             return
 
         print('Winning strategy does not exist for some agents, will compute minimal assumptions.\n')
@@ -156,6 +161,9 @@ class AdviserFramework:
             # this is okay because the mapping is unique in both directions
             inv_state_ids = {v: k for k, v in state_ids.items()}
             for state_id, act in strat.items():
+                if act == '-':
+                    print("state", inv_state_ids[int(state_id)], "has no action associated with in computed strategy.")
+                    continue
                 state = inv_state_ids[int(state_id)]
                 action = act.split('_')
                 agent.strategy[state] = action[2]
@@ -204,10 +212,11 @@ class AdviserFramework:
 
 
 if __name__ == '__main__':
-    agents_list_running_example = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'), formula='F(eba) & G!(crita & critb | crita && critc | crita & critd)'),
-                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='B', init_state='end_bot'), formula='F(etb) & G!(critb & crita | critb && critc | critb & critd)'),
-                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='C', init_state='end_left'), formula='F(erc) & G!(critc & crita | critc && critb | critc & critd)'),
-                                   AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'), formula='F(eld) & G!(critd & crita | critd && critb | critd & critc)')]
-
-    framework = AdviserFramework(agents_list_running_example)
+    # agents_list_running_example = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'), formula='F(eba) & G!(crita & critb | crita && critc | crita & critd)'),
+    #                                AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='B', init_state='end_bot'), formula='F(etb) & G!(critb & crita | critb && critc | critb & critd)'),
+    #                                AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='C', init_state='end_left'), formula='F(erc) & G!(critc & crita | critc && critb | critc & critd)'),
+    #                                AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'), formula='F(eld) & G!(critd & crita | critd && critb | critd & critc)')]
+    # framework = AdviserFramework(agents_list_running_example)
+    agents_grid_test = [AgentSynthGame(mdp=office_mdp(r_id='A', init_state='0,0'), formula='F(goala)')]
+    framework = AdviserFramework(agents_grid_test)
     framework.complete_strategy_synthesis(verbose=True)

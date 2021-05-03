@@ -274,20 +274,19 @@ def intersection_no_turn_symmetric_labels_mdp(r_id, init_state):
     return m
 
 
+# creates a nxn grid where you can move up, down, left, right or stay in each step. does not have any AP yet
 def square_grid_mdp(size, r_id, init_state):
     m = nx.DiGraph()
 
     # graph information
     m.graph['name'] = 'robot' + r_id
     m.graph['init'] = init_state
-    # all uppercase required, order sensitive
-    m.graph['ap'] = ['ap' + r_id]
 
     # create nodes p1 and p0 and edges p1-p0
     for x in range(size):
         for y in range(size):
             node_name = '%i,%i' % (x, y)
-            m.add_node(node_name, player=1, ap=['1'])
+            m.add_node(node_name, player=1)
 
             if x > 0:
                 up_name = '%i,%i_u' % (x, y)
@@ -326,5 +325,25 @@ def square_grid_mdp(size, r_id, init_state):
     return m
 
 
+def office_mdp(r_id, init_state):
+    size = 10
+    m = square_grid_mdp(size, r_id, init_state)
+    m.graph['ap'] = ['HALLWAY' + r_id]
+
+    # create hallway walls
+
+
+    attrs = {}
+    for node in m.nodes():
+        if m.nodes[node]['player'] != 1:
+            continue
+        attrs[node] = ['0']
+    nx.set_node_attributes(m, attrs, 'ap')
+
+    return m
+
+
 if __name__ == '__main__':
-    test_mdp = square_grid_mdp(10, '0', '1,1')
+    mdp = office_mdp('A', '0,0')
+    # mdp = corridor_no_turn_mdp('0', 'et0')
+    print(mdp.nodes(data=True))
