@@ -108,6 +108,49 @@ class GridWorld:
                                   self.WIDTH,
                                   self.HEIGHT])
 
+        # walls
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 0 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 4 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 2, self.MARGIN * 2])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 3 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 4 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 4, self.MARGIN * 2])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 8 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 4 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 2, self.MARGIN * 2])
+
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 0 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 6 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 2, self.MARGIN * 2])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 3 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 6 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 4, self.MARGIN * 2])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 8 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 6 + self.MARGIN,
+                          (self.MARGIN + self.WIDTH) * 2, self.MARGIN * 2])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 5 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 0,
+                          self.MARGIN * 2, (self.MARGIN + self.HEIGHT) * 4])
+        pygame.draw.rect(self.screen,
+                         self.BLACK,
+                         [(self.MARGIN + self.WIDTH) * 5 + self.MARGIN,
+                          (self.MARGIN + self.HEIGHT) * 6,
+                          self.MARGIN * 2, (self.MARGIN + self.HEIGHT) * 4])
+
         # display the robots
         self.sprites_list.draw(self.screen)
 
@@ -248,31 +291,40 @@ class GridWorld:
 
 
 if __name__ == '__main__':
-    pickled_agents = pickle.load(open('data/agents_converged_results_symmetric_corridor.p', 'rb'))
+    # pickled_agents = pickle.load(open('data/agents_converged_results_symmetric_corridor.p', 'rb'))
+    #
+    # # mdp player-1-states to coords
+    # mdp_states_dict = {
+    #     'crit':                 (2, 2),
+    #     'end_top':              (0, 2),
+    #     'corridor_top':         (1, 2),
+    #     'corridor_top_no_turn': (1, 2),
+    #     'corridor_bot':         (3, 2),
+    #     'corridor_bot_no_turn': (3, 2),
+    #     'end_bot':              (4, 2),
+    #     'end_left':             (2, 0),
+    #     'corridor_left':        (2, 1),
+    #     'corridor_left_no_turn': (2, 1),
+    #     'end_right':              (2, 4),
+    #     'corridor_right':         (2, 3),
+    #     'corridor_right_no_turn': (2, 3)
+    # }
 
-    # mdp player-1-states to coords
-    mdp_states_dict = {
-        'crit':                 (2, 2),
-        'end_top':              (0, 2),
-        'corridor_top':         (1, 2),
-        'corridor_top_no_turn': (1, 2),
-        'corridor_bot':         (3, 2),
-        'corridor_bot_no_turn': (3, 2),
-        'end_bot':              (4, 2),
-        'end_left':             (2, 0),
-        'corridor_left':        (2, 1),
-        'corridor_left_no_turn': (2, 1),
-        'end_right':              (2, 4),
-        'corridor_right':         (2, 3),
-        'corridor_right_no_turn': (2, 3)
-    }
+    # # build grid structure
+    # ex_grid = [[0 for col in range(5)] for row in range(5)]
+    # for i in range(5):
+    #     ex_grid[2][i] = 1
+    #     ex_grid[i][2] = 1
+    # ex_grid[2][2] = 2
+
+    pickled_agents = pickle.load(open('data/agents_results_office_roomtest.p', 'rb'))
+    mdp_states_dict = {}
+    for x in range(10):
+        for y in range(10):
+            mdp_states_dict["%i,%i" % (x,y)] = (x,y)
 
     # build grid structure
-    ex_grid = [[0 for col in range(5)] for row in range(5)]
-    for i in range(5):
-        ex_grid[2][i] = 1
-        ex_grid[i][2] = 1
-    ex_grid[2][2] = 2
+    ex_grid = [[1 for col in range(10)] for row in range(10)]
 
     # set current state of agents
     for agent in pickled_agents:

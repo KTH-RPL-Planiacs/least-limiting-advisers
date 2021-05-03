@@ -288,6 +288,10 @@ def square_grid_mdp(size, r_id, init_state):
             node_name = '%i,%i' % (x, y)
             m.add_node(node_name, player=1)
 
+            stay_name = '%i,%i_s' % (x, y)
+            m.add_node(stay_name, player=0)
+            m.add_edge(node_name, stay_name, act='stay')
+
             if x > 0:
                 up_name = '%i,%i_u' % (x, y)
                 m.add_node(up_name, player=0)
@@ -309,6 +313,8 @@ def square_grid_mdp(size, r_id, init_state):
     for x in range(size):
         for y in range(size):
             node_name = '%i,%i' % (x, y)
+            stay_name = '%i,%i_s' % (x, y)
+            m.add_edge(stay_name, node_name, prob=1.0)
             if x > 0:
                 down_name = '%i,%i_d' % (x-1, y)
                 m.add_edge(down_name, node_name, prob=1.0)
