@@ -328,17 +328,46 @@ def square_grid_mdp(size, r_id, init_state):
 def office_mdp(r_id, init_state):
     size = 10
     m = square_grid_mdp(size, r_id, init_state)
-    m.graph['ap'] = ['HALLWAY' + r_id]
+    m.graph['ap'] = ['HALLWAY' + r_id, 'OFFICETL' + r_id, 'OFFICETR' + r_id, 'OFFICEBL' + r_id, 'OFFICEBR' + r_id]
 
     # create hallway walls
-
-
-    attrs = {}
-    for node in m.nodes():
-        if m.nodes[node]['player'] != 1:
+    for x in range(size):
+        # doors
+        if x == 2 or x == 7:
             continue
-        attrs[node] = ['0']
+        m.remove_node('3,%i_d' % x)
+        m.remove_node('4,%i_u' % x)
+        m.remove_node('5,%i_d' % x)
+        m.remove_node('6,%i_u' % x)
+
+    # create office walls
+    for y in range(size):
+        # hallway
+        if y == 4 or y == 5:
+            continue
+        m.remove_node('%i,4_r' % y)
+        m.remove_node('%i,5_l' % y)
+
+    # room labelling
+    attrs = {}
+    for x in range(size):
+        for y in range(size):
+            node_name = '%i,%i' % (x,y)
+            if x < 4 and y < 5:
+                attrs[node_name] = ['01000']
+            elif x < 4 and y >= 5:
+                attrs[node_name] = ['00100']
+            elif x > 5 and y < 5:
+                attrs[node_name] = ['00010']
+            elif x > 5 and y >= 5:
+                attrs[node_name] = ['00001']
+            else:
+                attrs[node_name] = ['10000']
+
     nx.set_node_attributes(m, attrs, 'ap')
+
+    for node in m.nodes():
+        print(m.nodes[node])
 
     return m
 
