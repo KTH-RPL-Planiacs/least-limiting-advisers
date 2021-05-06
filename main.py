@@ -162,7 +162,7 @@ class AdviserFramework:
             inv_state_ids = {v: k for k, v in state_ids.items()}
             for state_id, act in strat.items():
                 if act == '-':
-                    print("state", inv_state_ids[int(state_id)], "has no action associated with in computed strategy.")
+                    # print("state", inv_state_ids[int(state_id)], "has no action associated with in computed strategy.")
                     # add "stay" as recommended action as the agent has fulfilled their goal
                     state = inv_state_ids[int(state_id)]
                     agent.strategy[state] = 'stay'
@@ -170,7 +170,6 @@ class AdviserFramework:
                     state = inv_state_ids[int(state_id)]
                     action = act.split('_')
                     agent.strategy[state] = action[2]
-            print(agent.strategy)
 
     def compute_and_exchange_fairness(self):
         fairness_changed = False
@@ -220,7 +219,11 @@ if __name__ == '__main__':
     #                                AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='C', init_state='end_left'), formula='F(erc) & G!(critc & crita | critc && critb | critc & critd)'),
     #                                AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'), formula='F(eld) & G!(critd & crita | critd && critb | critd & critc)')]
     # framework = AdviserFramework(agents_list_running_example)
-    agents_grid_test = [AgentSynthGame(mdp=office_mdp(r_id='A', init_state='4,0'), formula='F(officebra) & F(officebla) & F(officetla) & F(officetra)'),
-                        AgentSynthGame(mdp=office_mdp(r_id='B', init_state='5,9'), formula='F(officetlb) & F(officeblb)')]
+    agents_grid_test = [AgentSynthGame(mdp=office_clean_mdp(r_id='A', init_state='4,0'),
+                                       # formula='F(officebra & clean) & F(officebla & clean) & F(officetla & clean) & F(officetra & clean)'),
+                                       formula='F(officebra & clean & !officebrb)'),
+                        AgentSynthGame(mdp=office_bins_mdp(r_id='B', init_state='5,9'),
+                                       # formula='F(officetlb & bin) & F(officeblb & bin) & F(officetrb & bin) & F(officebrb & bin)')]
+                                       formula='F(officebrb & bin)')]
     framework = AdviserFramework(agents_grid_test)
     framework.complete_strategy_synthesis(verbose=True)

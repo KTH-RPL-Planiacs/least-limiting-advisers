@@ -372,8 +372,105 @@ def office_mdp(r_id, init_state):
 
     nx.set_node_attributes(m, attrs, 'ap')
 
-    for node in m.nodes():
-        print(m.nodes[node])
+    return m
+
+
+def office_bins_mdp(r_id, init_state):
+    size = 10
+    m = square_grid_mdp(size, r_id, init_state)
+    m.graph['ap'] = ['HALLWAY' + r_id, 'OFFICETL' + r_id, 'OFFICETR' + r_id, 'OFFICEBL' + r_id, 'OFFICEBR' + r_id, 'BIN']
+
+    # create hallway walls
+    for x in range(size):
+        # doors
+        if x == 2 or x == 7:
+            continue
+        m.remove_node('3,%i_d' % x)
+        m.remove_node('4,%i_u' % x)
+        m.remove_node('5,%i_d' % x)
+        m.remove_node('6,%i_u' % x)
+
+    # create office walls
+    for y in range(size):
+        # hallway
+        if y == 4 or y == 5:
+            continue
+        m.remove_node('%i,4_r' % y)
+        m.remove_node('%i,5_l' % y)
+
+    # room labelling
+    attrs = {}
+    for x in range(size):
+        for y in range(size):
+            node_name = '%i,%i' % (x, y)
+            if x < 4 and y < 5:
+                attrs[node_name] = ['010000']
+            elif x < 4 and y >= 5:
+                attrs[node_name] = ['001000']
+            elif x > 5 and y < 5:
+                attrs[node_name] = ['000100']
+            elif x > 5 and y >= 5:
+                attrs[node_name] = ['000010']
+            else:
+                attrs[node_name] = ['100000']
+
+    # bins
+    attrs['3,7'] = ['001001']
+    attrs['3,2'] = ['010001']
+    attrs['6,7'] = ['000011']
+    attrs['6,2'] = ['000101']
+
+    nx.set_node_attributes(m, attrs, 'ap')
+
+    return m
+
+
+def office_clean_mdp(r_id, init_state):
+    size = 10
+    m = square_grid_mdp(size, r_id, init_state)
+    m.graph['ap'] = ['HALLWAY' + r_id, 'OFFICETL' + r_id, 'OFFICETR' + r_id, 'OFFICEBL' + r_id, 'OFFICEBR' + r_id, 'CLEAN']
+
+    # create hallway walls
+    for x in range(size):
+        # doors
+        if x == 2 or x == 7:
+            continue
+        m.remove_node('3,%i_d' % x)
+        m.remove_node('4,%i_u' % x)
+        m.remove_node('5,%i_d' % x)
+        m.remove_node('6,%i_u' % x)
+
+    # create office walls
+    for y in range(size):
+        # hallway
+        if y == 4 or y == 5:
+            continue
+        m.remove_node('%i,4_r' % y)
+        m.remove_node('%i,5_l' % y)
+
+    # room labelling
+    attrs = {}
+    for x in range(size):
+        for y in range(size):
+            node_name = '%i,%i' % (x, y)
+            if x < 4 and y < 5:
+                attrs[node_name] = ['010000']
+            elif x < 4 and y >= 5:
+                attrs[node_name] = ['001000']
+            elif x > 5 and y < 5:
+                attrs[node_name] = ['000100']
+            elif x > 5 and y >= 5:
+                attrs[node_name] = ['000010']
+            else:
+                attrs[node_name] = ['100000']
+
+    # bins
+    attrs['1,7'] = ['001001']
+    attrs['1,2'] = ['010001']
+    attrs['8,7'] = ['000011']
+    attrs['8,2'] = ['000101']
+
+    nx.set_node_attributes(m, attrs, 'ap')
 
     return m
 

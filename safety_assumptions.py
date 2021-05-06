@@ -12,8 +12,6 @@ def minimal_safety_edges(synth, name, prism_handler, test=False):
     # create list of all doomed states that can never reach the accepting states
     doomed_states = []
     for state, state_id in state_ids.items():
-        if state_id >= len(coop_reach):
-            print(len(state_ids), len(coop_reach))
         if not coop_reach[state_id]:
             doomed_states.append(state)
 

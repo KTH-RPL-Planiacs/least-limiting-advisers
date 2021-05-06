@@ -8,6 +8,16 @@ from advisers import AdviserType
 import time
 
 
+# returns list of player-1 states reachable from a starting state
+def dfs(graph, node, reach_list):
+    if graph.nodes[node]['player'] == 1:
+        reach_list.append(node)
+        return
+
+    for succ in graph.successors(node):
+        dfs(graph, succ, reach_list)
+
+
 # group_and_flip({'a':[1,2], 'b':[2,1], 'c':[1,3,5]}) --> {{frozenset({1, 2}): ['a', 'b'], frozenset({1, 3, 5}): ['c']}}
 def group_and_flip(d):
     grouped_dict = {}
@@ -148,7 +158,6 @@ class AgentSynthGame:
             if self.synth.nodes[synth_from]['player'] == 1:
                 # for all possible mdp moves
                 for mdp_succ in self.mdp.successors(mdp_from):
-                    #print(mdp_succ)
                     assert self.mdp.nodes[mdp_succ]['player'] == 0  # this should be a probabilistic state in the mdp
                     # add the new state to the synthesis product and connect it
                     synth_succ = (mdp_succ, dfa_from)
@@ -300,6 +309,7 @@ class AgentSynthGame:
     # just fulfill the advice every time with probability > 0
     def modify_game_other_fairness(self):
         nodes_to_add = {}
+        nodes_to_avoid = []
 
         for sfa in self.other_advisers:
             if not sfa.adv_type == AdviserType.FAIRNESS:
@@ -332,11 +342,9 @@ class AgentSynthGame:
                         if valid_choice:
                             promise_actions.append(self.mdp.edges[mdp_state, mdp_succ]['act'])
 
+                    # we cannot fulfill our promise in this state
                     if not promise_actions:
-                        print('IN THIS STATE', node, 'I CANNOT FULFILL:')
-                        print(obs, adv)
-                        print('')
-                        return False
+                        nodes_to_avoid.append(node)
 
                     if node not in nodes_to_add.keys():
                         nodes_to_add[node] = {}
@@ -345,8 +353,33 @@ class AgentSynthGame:
                     if not promise_actions == available_actions:
                         nodes_to_add[node][(obs, tuple(sfa.pre_ap))] = promise_actions
 
+        # in these nodes, we cannot fulfill fairness promises, so we remove actions that could lead to these states
+        # from the game graph
+        for nta in nodes_to_avoid:
+            edges_to_remove = []
+            for node, data in self.synth.nodes(data=True):
+                # check if it's a player 1 state
+                if data['player'] != 1:
+                    continue
+
+                for succ in self.synth.successors(node):
+                    reach_list = []
+                    dfs(self.synth, succ, reach_list)
+                    if nta in reach_list:
+                        edges_to_remove.append((node, succ))
+
+            for e in edges_to_remove:
+                self.synth.remove_edge(e[0], e[1])
+
+        self.prune_unreachable_states()
+
         # we now have gathered all information about new promises and can construct the new promise_fulfilling states
         for node, promises in nodes_to_add.items():
+
+            # due to pruning a few lines above
+            if node not in self.synth:
+                continue
+
             # save old predecessors of node for later
             node_preds = list(self.synth.predecessors(node))
             # create new probabilistic node to choose between promise nodes
