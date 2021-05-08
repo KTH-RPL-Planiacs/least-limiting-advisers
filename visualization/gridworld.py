@@ -19,6 +19,23 @@ class RobotView(pygame.sprite.Sprite):
         self.name = name
 
 
+class TrashView(pygame.sprite.Sprite):
+
+    def __init__(self, width, height):
+        super().__init__()
+        self.trash_full = pygame.image.load('data/trash_full.png').convert_alpha()
+        self.trash_full = pygame.transform.scale(self.trash_full, (int(width), int(height)))
+        self.trash_empty = pygame.image.load('data/trash_empty.png').convert_alpha()
+        self.trash_empty = pygame.transform.scale(self.trash_empty, (int(width), int(height)))
+        self.image = self.trash_full
+        self.rect = self.image.get_rect()
+
+        # self.image.set_colorkey((255, 255, 255))
+
+    def empty_trash(self):
+        self.image = self.trash_empty
+
+
 class GridWorld:
 
     def __init__(self, grid, robots, screen_x=500, screen_y=500, cell_margin=5):
@@ -56,14 +73,33 @@ class GridWorld:
         self.font = pygame.font.SysFont('arial', 20)
         pygame.display.set_caption("Grid world")
 
+        self.sprites_list = pygame.sprite.Group()
+
         # agents
         self.robots = robots
         self.robot_views = []
-        self.sprites_list = pygame.sprite.Group()
+
         for robot_id, robot in enumerate(self.robots):
             robot_view = RobotView(robot.name, robot_id, self.WIDTH * 0.6, self.HEIGHT * 0.6)
             self.robot_views.append(robot_view)
             self.sprites_list.add(robot_view)
+
+        # trash cans
+        self.trash_views = []
+        self.trash_coords = [[3, 3],
+                             [6, 3],
+                             [3, 6],
+                             [6, 6]]
+        for i in range(4):
+            trash_view = TrashView(self.WIDTH, self.HEIGHT)
+            displace_x = ((self.WIDTH + self.MARGIN)/2) - (trash_view.rect.width / 2) + self.WIDTH * 0.03
+            displace_y = ((self.HEIGHT + self.MARGIN) / 2) - (trash_view.rect.height / 2) + self.HEIGHT * 0.1
+            current_posx = self.trash_coords[i][0] * (self.WIDTH + self.MARGIN) + displace_x
+            current_posy = self.trash_coords[i][1] * (self.HEIGHT + self.MARGIN) + displace_y
+            trash_view.rect.x = int(current_posx)
+            trash_view.rect.y = int(current_posy)
+            self.trash_views.append(trash_view)
+            self.sprites_list.add(trash_view)
 
     def text_objects(self, text, font):
         text_surface = font.render(text, True, self.BLACK)
@@ -97,7 +133,7 @@ class GridWorld:
                 elif self.grid[row][col] == 1:
                     self.color = self.WHITE
                 elif self.grid[row][col] == 2:
-                    self.color = self.RED
+                    self.color = (130, 115, 100)
                 else:
                     self.color = self.BLUE
 
@@ -173,9 +209,9 @@ class GridWorld:
         for robot_id, robot in enumerate(self.robots):
             robot_view = self.robot_views[robot_id]
             if isinstance(robot.current_state[0], tuple):
-                current_coords = states_dict[robot.current_state[0][0]]
+                robot.current_coords = states_dict[robot.current_state[0][0]]
             else:
-                current_coords = states_dict[robot.current_state[0]]
+                robot.current_coords = states_dict[robot.current_state[0]]
             if isinstance(robot.next_state[0], tuple):
                 next_coords = states_dict[robot.next_state[0][0]]
             else:
@@ -183,8 +219,8 @@ class GridWorld:
 
             displace_x = ((self.WIDTH + self.MARGIN)/2) - (robot_view.rect.width / 2)
             displace_y = ((self.HEIGHT + self.MARGIN) / 2) - (robot_view.rect.height / 2)
-            current_posx = current_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
-            current_posy = current_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
+            current_posx = robot.current_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
+            current_posy = robot.current_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
             next_posx = next_coords[1] * (self.WIDTH + self.MARGIN) + displace_x
             next_posy = next_coords[0] * (self.HEIGHT + self.MARGIN) + displace_y
 
@@ -194,8 +230,46 @@ class GridWorld:
             robot_view.rect.x = int(current_posx * (1 - t) + next_posx * t)
             robot_view.rect.y = int(current_posy * (1 - t) + next_posy * t)
 
+            if robot_id >= 2:   # now check if we empty the trash cans
+                if robot.current_coords[0] == 3 and robot.current_coords[1] == 2:
+                    self.trash_views[0].empty_trash()
+                if robot.current_coords[0] == 3 and robot.current_coords[1] == 7:
+                    self.trash_views[1].empty_trash()
+                if robot.current_coords[0] == 6 and robot.current_coords[1] == 2:
+                    self.trash_views[2].empty_trash()
+                if robot.current_coords[0] == 6 and robot.current_coords[1] == 7:
+                    self.trash_views[3].empty_trash()
+            else:               # check if we change the floors to cleaned
+                if self.check_clean_and_alone(robot, 0, 3, 0, 4, 1, 2):
+                    for x in range(0, 5):
+                        for y in range(0, 4):
+                            self.grid[y][x] = 1
+                if self.check_clean_and_alone(robot, 0, 3, 5, 9, 1, 7):
+                    for x in range(5, 10):
+                        for y in range(0, 4):
+                            self.grid[y][x] = 1
+                if self.check_clean_and_alone(robot, 6, 9, 0, 4, 8, 2):
+                    for x in range(0, 5):
+                        for y in range(6, 10):
+                            self.grid[y][x] = 1
+                if self.check_clean_and_alone(robot, 6, 9, 5, 9, 8, 7):
+                    for x in range(5, 10):
+                        for y in range(6, 10):
+                            self.grid[y][x] = 1
+
         # render the results
         self.render()
+
+    def check_clean_and_alone(self, robot, xmin, xmax, ymin, ymax, cleanx, cleany):
+        if robot.current_coords[0] == cleanx and robot.current_coords[1] == cleany:
+            alone = True
+            for other_robot in self.robots:
+                if other_robot.name == robot.name:
+                    continue
+                if xmin <= other_robot.current_coords[0] <= xmax and ymin <= other_robot.current_coords[1] <= ymax:
+                    alone = False
+            return alone
+        return False
 
     def compute_next_step(self):
         next_obs = ''
@@ -271,6 +345,7 @@ class GridWorld:
 
         running = True
         simulate = False
+        self.run_step(states_dict)
         while running:
             # handle all events
             for event in pygame.event.get():
@@ -324,7 +399,10 @@ if __name__ == '__main__':
             mdp_states_dict["%i,%i" % (x,y)] = (x,y)
 
     # build grid structure
-    ex_grid = [[1 for col in range(10)] for row in range(10)]
+    ex_grid = [[2 for col in range(10)] for row in range(10)]
+    for x in range(10):
+        ex_grid[4][x] = 1
+        ex_grid[5][x] = 1
 
     # set current state of agents
     for agent in pickled_agents:
