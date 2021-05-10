@@ -5,22 +5,22 @@ from models import *
 
 def running_example():
     agents = [AgentSynthGame(mdp=corridor_no_turn_mdp(r_id='A', init_state='end_top'),
-                             formula='F(eba) & G!(crita & critb'),
+                             formula='F(eba) & G!(crita & critb)'),
               AgentSynthGame(mdp=corridor_no_turn_mdp(r_id='B', init_state='end_bot'),
-                             formula='F(etb) & G!(critb & crita')]
+                             formula='F(etb) & G!(critb & crita)')]
     framework = AdviserFramework(agents)
     framework.complete_strategy_synthesis(verbose=True)
 
 
 def intersection():
     agents = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'),
-                             formula='F(eba) & G!(crita & critb | crita && critc | crita & critd)'),
+                             formula='F(eba) & G!(crita & critb | crita & critc | crita & critd)'),
               AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='B', init_state='end_bot'),
-                             formula='F(etb) & G!(critb & crita | critb && critc | critb & critd)'),
+                             formula='F(etb) & G!(critb & crita | critb & critc | critb & critd)'),
               AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='C', init_state='end_left'),
-                             formula='F(erc) & G!(critc & crita | critc && critb | critc & critd)'),
+                             formula='F(erc) & G!(critc & crita | critc & critb | critc & critd)'),
               AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'),
-                             formula='F(eld) & G!(critd & crita | critd && critb | critd & critc)')]
+                             formula='F(eld) & G!(critd & crita | critd & critb | critd & critc)')]
     framework = AdviserFramework(agents)
     framework.complete_strategy_synthesis(verbose=True)
 
