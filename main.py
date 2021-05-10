@@ -3,11 +3,11 @@ from adviser_framework import AdviserFramework
 from models import *
 
 
-def running_example():
-    agents = [AgentSynthGame(mdp=corridor_no_turn_mdp(r_id='A', init_state='end_top'),
-                             formula='F(eba) & G!(crita & critb)'),
-              AgentSynthGame(mdp=corridor_no_turn_mdp(r_id='B', init_state='end_bot'),
-                             formula='F(etb) & G!(critb & crita)')]
+def running_example_direction():
+    agents = [AgentSynthGame(mdp=corridor_directions_mdp(r_id='A', init_state='end_l_fr'),
+                             formula='F(era) & G!(crita & critb)'),
+              AgentSynthGame(mdp=corridor_directions_mdp(r_id='B', init_state='end_r_fl'),
+                             formula='F(elb) & G!(critb & crita)')]
     framework = AdviserFramework(agents)
     framework.complete_strategy_synthesis(verbose=True)
 
@@ -43,4 +43,4 @@ def office_example():
 
 
 if __name__ == '__main__':
-    office_example()
+    running_example_direction()

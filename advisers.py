@@ -150,6 +150,21 @@ def reduce_set_of_guards(sog):
     return new_sog.difference(unnecessary_guards)
 
 
+def compare_obs(test_obs, existing_obs):
+
+    if len(test_obs) != len(existing_obs):
+        return False
+
+    cmp = True
+    for i in range(len(test_obs)):
+        if test_obs[i] == 'X' or existing_obs[i] == 'X':
+            continue
+        if test_obs[i] != existing_obs[i]:
+            return False
+
+    return True
+
+
 def simplest_adviser(synth, edges, adv_type):
     adv_obj = AdviserObject(pre_ap=synth.graph['ap'],
                             adv_ap=synth.graph['env_ap'],
@@ -168,7 +183,7 @@ def simplest_adviser(synth, edges, adv_type):
         reduced_obs = obs
         for i, o in enumerate(obs):
             # construct hypothetical obs
-            # TODO: currently this only reduces 0 entries (models are one-hot-encoding)
+            # TODO: currently this only reduces 0 entries
             test_obs = flip_guard_bit(reduced_obs, i, skip_ones=True)
 
             if test_obs == reduced_obs:
@@ -180,8 +195,7 @@ def simplest_adviser(synth, edges, adv_type):
                 if 'ap' not in data.keys():
                     continue                # this is not a player 1 state
                 existing_obs = data['ap']
-
-                if test_obs == existing_obs:    # this hypothetical other obs exists, so we cannot reduce
+                if compare_obs(test_obs, existing_obs):    # this hypothetical other obs exists, so we cannot reduce
                     can_be_reduced = False
 
             if can_be_reduced:  # we can reduce!

@@ -73,6 +73,152 @@ def corridor_mdp(r_id, init_state):
     return m
 
 
+def corridor_directions_mdp(r_id, init_state):
+    m = nx.DiGraph()
+
+    # graph information
+    m.graph['name'] = 'robot' + r_id
+    m.graph['init'] = init_state
+    # all uppercase required, order sensitive
+    m.graph['ap'] = ['EL' + r_id, 'CL' + r_id, 'CRIT' + r_id, 'CR' + r_id, 'ER' + r_id, 'FR' + r_id]
+
+    # player 1 states
+    m.add_node('end_l_fr', player=1, ap=['100001'])
+    m.add_node('end_l_fl', player=1, ap=['100000'])
+    m.add_node('cor_l_fr', player=1, ap=['010001'])
+    m.add_node('cor_l_fl', player=1, ap=['010000'])
+    m.add_node('crit_fr', player=1, ap=['001001'])
+    m.add_node('crit_fl', player=1, ap=['001000'])
+    m.add_node('cor_r_fr', player=1, ap=['000101'])
+    m.add_node('cor_r_fl', player=1, ap=['000100'])
+    m.add_node('end_r_fr', player=1, ap=['000011'])
+    m.add_node('end_r_fl', player=1, ap=['000010'])
+
+    # probabilistic states
+    m.add_node('end_l_fr_s', player=0)
+    m.add_node('end_l_fr_t', player=0)
+    m.add_node('end_l_fr_m', player=0)
+
+    m.add_node('end_l_fl_s', player=0)
+    m.add_node('end_l_fl_t', player=0)
+    m.add_node('end_l_fl_m', player=0)
+
+    m.add_node('cor_l_fr_s', player=0)
+    m.add_node('cor_l_fr_t', player=0)
+    m.add_node('cor_l_fr_m', player=0)
+
+    m.add_node('cor_l_fl_s', player=0)
+    m.add_node('cor_l_fl_t', player=0)
+    m.add_node('cor_l_fl_m', player=0)
+
+    m.add_node('crit_fr_s', player=0)
+    m.add_node('crit_fr_t', player=0)
+    m.add_node('crit_fr_m', player=0)
+
+    m.add_node('crit_fl_s', player=0)
+    m.add_node('crit_fl_t', player=0)
+    m.add_node('crit_fl_m', player=0)
+
+    m.add_node('cor_r_fr_s', player=0)
+    m.add_node('cor_r_fr_t', player=0)
+    m.add_node('cor_r_fr_m', player=0)
+
+    m.add_node('cor_r_fl_s', player=0)
+    m.add_node('cor_r_fl_t', player=0)
+    m.add_node('cor_r_fl_m', player=0)
+
+    m.add_node('end_r_fr_s', player=0)
+    m.add_node('end_r_fr_t', player=0)
+    m.add_node('end_r_fr_m', player=0)
+
+    m.add_node('end_r_fl_s', player=0)
+    m.add_node('end_r_fl_m', player=0)
+    m.add_node('end_r_fl_t', player=0)
+
+    # player 1 edges
+    m.add_edge('end_l_fr', 'end_l_fr_s', act='stay')
+    m.add_edge('end_l_fr', 'end_l_fr_t', act='turn')
+    m.add_edge('end_l_fr', 'end_l_fr_m', act='move')
+
+    m.add_edge('end_l_fl', 'end_l_fl_s', act='stay')
+    m.add_edge('end_l_fl', 'end_l_fl_t', act='turn')
+    m.add_edge('end_l_fl', 'end_l_fl_m', act='move')
+
+    m.add_edge('cor_l_fr', 'cor_l_fr_s', act='stay')
+    m.add_edge('cor_l_fr', 'cor_l_fr_t', act='turn')
+    m.add_edge('cor_l_fr', 'cor_l_fr_m', act='move')
+
+    m.add_edge('cor_l_fl', 'cor_l_fl_s', act='stay')
+    m.add_edge('cor_l_fl', 'cor_l_fl_t', act='turn')
+    m.add_edge('cor_l_fl', 'cor_l_fl_m', act='move')
+
+    m.add_edge('crit_fr', 'crit_fr_s', act='stay')
+    m.add_edge('crit_fr', 'crit_fr_t', act='turn')
+    m.add_edge('crit_fr', 'crit_fr_m', act='move')
+
+    m.add_edge('crit_fl', 'crit_fl_s', act='stay')
+    m.add_edge('crit_fl', 'crit_fl_t', act='turn')
+    m.add_edge('crit_fl', 'crit_fl_m', act='move')
+
+    m.add_edge('cor_r_fr', 'cor_r_fr_s', act='stay')
+    m.add_edge('cor_r_fr', 'cor_r_fr_t', act='turn')
+    m.add_edge('cor_r_fr', 'cor_r_fr_m', act='move')
+
+    m.add_edge('cor_r_fl', 'cor_r_fl_s', act='stay')
+    m.add_edge('cor_r_fl', 'cor_r_fl_t', act='turn')
+    m.add_edge('cor_r_fl', 'cor_r_fl_m', act='move')
+
+    m.add_edge('end_r_fr', 'end_r_fr_s', act='stay')
+    m.add_edge('end_r_fr', 'end_r_fr_t', act='turn')
+    m.add_edge('end_r_fr', 'end_r_fr_m', act='move')
+
+    m.add_edge('end_r_fl', 'end_r_fl_s', act='stay')
+    m.add_edge('end_r_fl', 'end_r_fl_t', act='turn')
+    m.add_edge('end_r_fl', 'end_r_fl_m', act='move')
+
+    # probabilistic edges
+    m.add_edge('end_l_fr_s', 'end_l_fr', prob=1.0)
+    m.add_edge('end_l_fr_t', 'end_l_fl', prob=1.0)
+    m.add_edge('end_l_fr_m', 'cor_l_fr', prob=1.0)
+
+    m.add_edge('end_l_fl_s', 'end_l_fl', prob=1.0)
+    m.add_edge('end_l_fl_t', 'end_l_fr', prob=1.0)
+    m.add_edge('end_l_fl_m', 'end_l_fl', prob=1.0)
+
+    m.add_edge('cor_l_fr_s', 'cor_l_fr', prob=1.0)
+    m.add_edge('cor_l_fr_t', 'cor_l_fl', prob=1.0)
+    m.add_edge('cor_l_fr_m', 'crit_fr', prob=1.0)
+
+    m.add_edge('cor_l_fl_s', 'cor_l_fl', prob=1.0)
+    m.add_edge('cor_l_fl_t', 'cor_l_fr', prob=1.0)
+    m.add_edge('cor_l_fl_m', 'end_l_fl', prob=1.0)
+
+    m.add_edge('crit_fr_s', 'crit_fr', prob=1.0)
+    m.add_edge('crit_fr_t', 'crit_fl', prob=1.0)
+    m.add_edge('crit_fr_m', 'cor_r_fr', prob=1.0)
+
+    m.add_edge('crit_fl_s', 'crit_fl', prob=1.0)
+    m.add_edge('crit_fl_t', 'crit_fr', prob=1.0)
+    m.add_edge('crit_fl_m', 'cor_l_fl', prob=1.0)
+
+    m.add_edge('cor_r_fr_s', 'cor_r_fr', prob=1.0)
+    m.add_edge('cor_r_fr_t', 'cor_r_fl', prob=1.0)
+    m.add_edge('cor_r_fr_m', 'end_r_fr', prob=1.0)
+
+    m.add_edge('cor_r_fl_s', 'cor_r_fl', prob=1.0)
+    m.add_edge('cor_r_fl_t', 'cor_r_fr', prob=1.0)
+    m.add_edge('cor_r_fl_m', 'crit_fl', prob=1.0)
+
+    m.add_edge('end_r_fr_s', 'end_r_fr', prob=1.0)
+    m.add_edge('end_r_fr_t', 'end_r_fl', prob=1.0)
+    m.add_edge('end_r_fr_m', 'end_r_fr', prob=1.0)
+
+    m.add_edge('end_r_fl_s', 'end_r_fl', prob=1.0)
+    m.add_edge('end_r_fl_t', 'end_r_fr', prob=1.0)
+    m.add_edge('end_r_fl_m', 'cor_r_fl', prob=1.0)
+    return m
+
+
 def corridor_with_directions_mdp(r_id, init_state):
     m = nx.DiGraph()
 
@@ -620,6 +766,4 @@ def office_clean_mdp(r_id, init_state):
 
 
 if __name__ == '__main__':
-    mdp = office_mdp('A', '0,0')
-    # mdp = corridor_no_turn_mdp('0', 'et0')
-    print(mdp.nodes(data=True))
+    mdp = corridor_directions_mdp('A', 'end_l_fr')
