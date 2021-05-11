@@ -59,7 +59,26 @@ def grid_directions_mdp(width, height):
     return m
 
 
+def office_5x10_directions(r_id):
+    m = grid_directions_mdp(10, 5)
+    m.graph['ap'] = ['BIN' + r_id]
+
+    # labelling
+    attrs = {}
+    for x in range(10):
+        for y in range(5):
+            pos = '%i,%i' % (x, y)
+            directions = ['_fu', '_fr', '_fd', '_fl']
+
+            for d in directions:
+                if x == 4 and y == 2:
+                    attrs[pos + d] = ['1']
+                else:
+                    attrs[pos + d] = ['0']
+
+    nx.set_node_attributes(m, attrs, 'ap')
+    return m
+
+
 if __name__ == '__main__':
-    mdp = grid_directions_mdp(10, 5)
-    print(len(mdp.nodes()))
-    print(len(mdp.edges()))
+    mdp = office_5x10_directions('A')
