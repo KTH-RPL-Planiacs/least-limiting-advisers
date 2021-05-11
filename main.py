@@ -1,6 +1,7 @@
 from agent_synth_game import AgentSynthGame
 from adviser_framework import AdviserFramework
-from models import *
+from models.corridor import corridor_directions_mdp
+from models.misc import *
 
 
 def running_example_direction():
