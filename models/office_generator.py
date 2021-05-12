@@ -36,22 +36,22 @@ def grid_directions_mdp(width, height):
             pos = '%i,%i' % (x, y)
             # moving up
             if y > 0:
-                new_pos = '%i,%i' % (x, y-1)
+                new_pos = '%i,%i' % (x, y - 1)
                 m.add_node(pos + '_fu_m', player=0)
                 m.add_edge(pos + '_fu', pos + '_fu_m', act='move')
                 m.add_edge(pos + '_fu_m', new_pos + '_fu', prob=1.0)
-            if y < height-1:
-                new_pos = '%i,%i' % (x, y+1)
+            if y < height - 1:
+                new_pos = '%i,%i' % (x, y + 1)
                 m.add_node(pos + '_fd_m', player=0)
                 m.add_edge(pos + '_fd', pos + '_fd_m', act='move')
                 m.add_edge(pos + '_fd_m', new_pos + '_fd', prob=1.0)
             if x > 0:
-                new_pos = '%i,%i' % (x-1, y)
+                new_pos = '%i,%i' % (x - 1, y)
                 m.add_node(pos + '_fl_m', player=0)
                 m.add_edge(pos + '_fl', pos + '_fl_m', act='move')
                 m.add_edge(pos + '_fl_m', new_pos + '_fl', prob=1.0)
-            if x < width-1:
-                new_pos = '%i,%i' % (x+1, y)
+            if x < width - 1:
+                new_pos = '%i,%i' % (x + 1, y)
                 m.add_node(pos + '_fr_m', player=0)
                 m.add_edge(pos + '_fr', pos + '_fr_m', act='move')
                 m.add_edge(pos + '_fr_m', new_pos + '_fr', prob=1.0)
@@ -59,9 +59,32 @@ def grid_directions_mdp(width, height):
     return m
 
 
-def office_5x10_directions(r_id):
+def office_5x10(r_id):
     m = grid_directions_mdp(10, 5)
     m.graph['ap'] = ['BIN' + r_id]
+
+    # walls
+    doors_up = [1, 4, 8]
+    doors_down = [1, 3, 5, 7, 9]
+    for x in range(10):
+        if x not in doors_up:
+            m.remove_node('%i,2_fu_m' % x)
+        if x not in doors_down:
+            m.remove_node('%i,2_fd_m' % x)
+
+    upper_walls = [2, 6]
+    lower_walls = [1, 3, 5, 7]
+    for w in upper_walls:
+        m.remove_node('%i,0_fr_m' % w)
+        m.remove_node('%i,1_fr_m' % w)
+        m.remove_node('%i,0_fl_m' % (w + 1))
+        m.remove_node('%i,1_fl_m' % (w + 1))
+
+    for w in lower_walls:
+        m.remove_node('%i,3_fr_m' % w)
+        m.remove_node('%i,4_fr_m' % w)
+        m.remove_node('%i,3_fl_m' % (w + 1))
+        m.remove_node('%i,4_fl_m' % (w + 1))
 
     # labelling
     attrs = {}
@@ -81,4 +104,6 @@ def office_5x10_directions(r_id):
 
 
 if __name__ == '__main__':
-    mdp = office_5x10_directions('A')
+    mdp = office_5x10('A')
+    print(mdp.number_of_nodes())
+    print(mdp.number_of_edges())
