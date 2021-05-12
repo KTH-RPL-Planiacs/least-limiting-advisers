@@ -2,15 +2,16 @@ from agent_synth_game import AgentSynthGame
 from adviser_framework import AdviserFramework
 from models.corridor import corridor_directions_mdp
 from models.misc import *
+from models.office_generator import *
 
 
-def running_example_direction():
+def running_example():
     agents = [AgentSynthGame(mdp=corridor_directions_mdp(r_id='A', init_state='end_l_fr'),
                              formula='F(era) & G!(crita & critb)'),
               AgentSynthGame(mdp=corridor_directions_mdp(r_id='B', init_state='end_r_fl'),
                              formula='F(elb) & G!(critb & crita)')]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis(verbose=True)
+    framework.complete_strategy_synthesis('results/running_example_direction.p', verbose=True)
 
 
 def intersection():
@@ -23,10 +24,10 @@ def intersection():
               AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='D', init_state='end_right'),
                              formula='F(eld) & G!(critd & crita | critd & critb | critd & critc)')]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis(verbose=True)
+    framework.complete_strategy_synthesis('results/intersection.p', verbose=True)
 
 
-def office_example():
+def old_office_example():
     agents = [AgentSynthGame(mdp=office_clean_mdp(r_id='A', init_state='4,0'),
                              formula='F(officetra & clean & !officetrc) & '
                                      'F(officetla & clean & !officetlb)'),
@@ -40,8 +41,21 @@ def office_example():
                              formula='F(officebrc & bin) & '
                                      'F(officetrc & bin)')]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis(verbose=True)
+    framework.complete_strategy_synthesis('results/old_office_example.p', verbose=True)
+
+
+def office_10x5(n_agents, n_bins):
+    agents = []
+    for n in range(n_agents):
+        ltlf = ''
+        for i in range(n_bins):
+            ltlf += '(F bin%i%i) & ' % (i, n)
+        ltlf = ltlf[:-3]
+        agents.append(AgentSynthGame(mdp=office_5x10_mdp(r_id='%i' % n, n_bins=n_bins), formula=ltlf))
+    framework = AdviserFramework(agents)
+    framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_bins), verbose=True)
 
 
 if __name__ == '__main__':
-    running_example_direction()
+    # running_example()
+    office_10x5(n_agents=1, n_bins=3)

@@ -31,7 +31,7 @@ class AdviserFramework:
         self.ltlf_parser = LTLf2nxParser()
         self.agents = agents
 
-    def complete_strategy_synthesis(self, verbose=False):
+    def complete_strategy_synthesis(self, results_path, verbose=False):
         abs_start_time = time.time()
         self.create_synth_games()
         winnable = self.check_winnable()
@@ -41,8 +41,9 @@ class AdviserFramework:
             print('Computing Strategies...\n')
             self.create_strategies()
 
-            print('Pickling results...\n')
-            pickle.dump(self.agents, open('visualization/data/agents_results_office_roomtest.p', 'wb'))
+            print('Pickling results into %s ...\n' % results_path)
+            pickle.dump(self.agents, open(results_path, 'wb'))
+            print('Took', time.time() - abs_start_time, 'seconds in total.\n')
             return
 
         print('Winning strategy does not exist for some agents, will compute minimal assumptions.\n')
@@ -112,8 +113,8 @@ class AdviserFramework:
         print('Computing Strategies...\n')
         self.create_strategies()
 
-        print('Pickling results...\n')
-        pickle.dump(self.agents, open('visualization/data/agents_results_office_roomtest.p', 'wb'))
+        print('Pickling results into %s ...\n' % results_path)
+        pickle.dump(self.agents, open(results_path, 'wb'))
 
     def create_synth_games(self):
         start_time = time.time()

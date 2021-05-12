@@ -69,7 +69,7 @@ def sog_fits_to_guard(guard, sog, guard_ap, sog_ap):
 
 class AgentSynthGame:
 
-    def __init__(self, mdp, formula, name='agent'):
+    def __init__(self, mdp, formula, name=''):
         self.mdp = mdp
         self.spec = formula
         self.full_spec = None
