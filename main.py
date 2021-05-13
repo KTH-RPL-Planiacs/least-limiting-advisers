@@ -11,7 +11,7 @@ def running_example():
               AgentSynthGame(mdp=corridor_directions_mdp(r_id='B', init_state='end_r_fl'),
                              formula='F(elb) & G!(critb & crita)')]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis('results/running_example_direction.p', verbose=True)
+    framework.complete_strategy_synthesis('results/running_example.p', verbose=True)
 
 
 def intersection():
@@ -56,6 +56,17 @@ def office_10x5(n_agents, n_bins):
     framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_bins), verbose=True)
 
 
+def dumb_stuff():
+    agents = [
+        AgentSynthGame(mdp=switch_mdp('0', 'off'), formula='G !on0'),
+        AgentSynthGame(mdp=switch_mdp('1', 'off'), formula='G !on0'),
+        AgentSynthGame(mdp=switch_mdp('2', 'off'), formula='G !on1')
+    ]
+    framework = AdviserFramework(agents)
+    framework.complete_strategy_synthesis('results/dumb.p', verbose=True)
+
+
 if __name__ == '__main__':
     # running_example()
-    office_10x5(n_agents=1, n_bins=3)
+    # office_10x5(n_agents=2, n_bins=2)
+    dumb_stuff()

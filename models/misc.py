@@ -1,6 +1,36 @@
 import networkx as nx
 
 
+def switch_mdp(r_id, init_state):
+    m = nx.DiGraph()
+
+    # graph information
+    m.graph['name'] = 'robot' + r_id
+    m.graph['init'] = init_state
+    # all uppercase required, order sensitive
+    m.graph['ap'] = ['ON' + r_id]
+
+    m.add_node('on', player=1, ap=['1'])
+    m.add_node('off', player=1, ap=['0'])
+
+    m.add_node('on_w', player=0)
+    m.add_node('on_s', player=0)
+    m.add_node('off_w', player=0)
+    m.add_node('off_s', player=0)
+
+    m.add_edge('on', 'on_w', act='wait')
+    m.add_edge('on', 'on_s', act='switch')
+    m.add_edge('off', 'off_w', act='wait')
+    m.add_edge('off', 'off_s', act='switch')
+
+    m.add_edge('on_w', 'on', prob=1.0)
+    m.add_edge('on_s', 'off', prob=1.0)
+    m.add_edge('off_w', 'off', prob=1.0)
+    m.add_edge('off_s', 'on', prob=1.0)
+
+    return m
+
+
 def intersection_no_turn_symmetric_labels_mdp(r_id, init_state):
     m = nx.DiGraph()
 
