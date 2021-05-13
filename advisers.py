@@ -32,7 +32,7 @@ class AdviserObject:
 
     def safety_adviser_to_spec(self, adv_ap_filter):
         if self.adv_type != AdviserType.SAFETY:
-            print('<AgentSynthGame.adviser_to_spec> Only safety is implemented so far!')
+            print('<AgentSynthGame.adviser_to_spec> Only safety is implemented!')
             return
 
         safety_formulas = []
@@ -68,7 +68,10 @@ class AdviserObject:
                 if not_empty:
                     adv_f = adv_f[0:-3] + ' | '
 
-            spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
+            if pre == 'X':
+                spec = 'G(!(' + adv_f[0:-3] + '))'
+            else:
+                spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
             if overall_not_empty:
                 safety_formulas.append(spec)
 
@@ -155,7 +158,6 @@ def compare_obs(test_obs, existing_obs):
     if len(test_obs) != len(existing_obs):
         return False
 
-    cmp = True
     for i in range(len(test_obs)):
         if test_obs[i] == 'X' or existing_obs[i] == 'X':
             continue
@@ -210,5 +212,17 @@ def simplest_adviser(synth, edges, adv_type):
     # reduce advice
     for obs, sog in adv_obj.adviser.items():
         adv_obj.adviser[obs] = reduce_set_of_guards(sog)
+
+    # try to merge adviser items - currently only in the case where all items have same adv and pre combine to TRUE
+    reduced_pre = reduce_set_of_guards(set(adv_obj.adviser.keys()))
+    if len(reduced_pre) == 1 and all(c == 'X' for c in next(iter(reduced_pre))):
+        list_to_check = list(adv_obj.adviser.values())
+        same = True
+        for adv in list_to_check:
+            if adv != list_to_check[0]:
+                same = False
+                break
+        if same:
+            adv_obj.adviser = {'X': list_to_check[0]}
 
     return adv_obj
