@@ -51,11 +51,7 @@ class AdviserFramework:
         fairness_rounds = 0
         while fairness_changed:
             fairness_rounds += 1
-
-            print('######################################')
-            print('###### Fairness Exchange Round %i ######' % fairness_rounds)
-            print('######################################\n')
-
+            print('#### Fairness Exchange Round %i\n' % fairness_rounds)
             safety_start_time = time.time()
             safety_changed = True
             safety_rounds = 0

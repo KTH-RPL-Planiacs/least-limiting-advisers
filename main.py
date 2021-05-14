@@ -60,15 +60,19 @@ def switch_test():
 
 
 if __name__ == '__main__':
-    times = []
-    for _ in range(10):
-        # times.append(office_10x5(n_agents=5, n_bins=3))
-        times.append(office_spillage_10x5(n_bin_agents=2, n_clean_agents=1, n_bins=1))
-    print('MEAN TIME:', statistics.mean(times))
-    print('STD DEV:', statistics.stdev(times))
-    # running_example()
-    # office_spillage_10x5(n_bin_agents=2, n_bins=1, n_clean_agents=1)
-    # switch_test()
+    results = []
+    for n in range(1, 6):
+        times = []
+        while len(times) < 10:
+            # times.append(office_10x5(n_agents=5, n_bins=3))
+            try:
+                times.append(office_spillage_10x5(n_bin_agents=n, n_clean_agents=5, n_bins=1))
+            except:
+                print('WHOOPSIE!')
+        print('MEAN TIME:', statistics.mean(times))
+        print('STD DEV:', statistics.stdev(times))
+        results.append((statistics.mean(times), statistics.stdev(times)))
+    print(results)
 
 # def intersection():
 #     agents = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'),
