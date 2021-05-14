@@ -68,7 +68,7 @@ class AdviserObject:
                 if not_empty:
                     adv_f = adv_f[0:-3] + ' | '
 
-            if pre == 'X':
+            if all(c == 'X' for c in pre):
                 spec = 'G(!(' + adv_f[0:-3] + '))'
             else:
                 spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
@@ -101,10 +101,25 @@ def replace_guard_bit(guard, bit, lit):
     return new_guard
 
 
+def resolve_all_x(guard):
+    return_set = set()
+    for i, o in enumerate(guard):
+        if o == 'X':
+            return_set = return_set.union(resolve_all_x(replace_guard_bit(guard, i, '0')))
+            return_set = return_set.union(resolve_all_x(replace_guard_bit(guard, i, '1')))
+
+    if len(return_set) == 0:
+        return_set.add(guard)
+    return return_set
+
+
 def reduce_set_of_guards(sog):
-    # blow up the set of guards with all possible generalizations
-    new_sog = sog
+    # first, resolve all generalizations
+    new_sog = set()
+    for g in sog:
+        new_sog = new_sog.union(resolve_all_x(g))
     changed = True
+    # blow up the set of guards with all possible generalizations
     while changed:
         blown_up_sog = set(new_sog)
         for guard in new_sog:  # for each guard
@@ -117,7 +132,11 @@ def reduce_set_of_guards(sog):
                     continue
 
                 # if the hypothetical guard is not also in the new sog, we cannot reduce
-                if test_guard not in new_sog:
+                test_guard_in_new_sog = False
+                for g in new_sog:
+                    if compare_obs(test_guard, g):
+                        test_guard_in_new_sog = True
+                if not test_guard_in_new_sog:
                     continue
 
                 # create a reduced guard
@@ -159,7 +178,7 @@ def compare_obs(test_obs, existing_obs):
         return False
 
     for i in range(len(test_obs)):
-        if test_obs[i] == 'X' or existing_obs[i] == 'X':
+        if test_obs[i] == 'X' and existing_obs[i] == 'X':
             continue
         if test_obs[i] != existing_obs[i]:
             return False
@@ -223,6 +242,6 @@ def simplest_adviser(synth, edges, adv_type):
                 same = False
                 break
         if same:
-            adv_obj.adviser = {'X': list_to_check[0]}
+            adv_obj.adviser = {next(iter(reduced_pre)): list_to_check[0]}
 
     return adv_obj

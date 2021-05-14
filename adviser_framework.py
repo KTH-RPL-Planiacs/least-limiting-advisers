@@ -6,13 +6,11 @@ from py4j.protocol import Py4JNetworkError
 
 # OTHER CODE #
 from ltlf2dfa_nx import LTLf2nxParser
-from agent_synth_game import AgentSynthGame
 from prismhandler.prism_handler import PrismHandler
 from prismhandler.prism_io import write_prism_model
 from safety_assumptions import minimal_safety_edges
 from fairness_assumptions import minimal_fairness_edges
 from advisers import simplest_adviser, AdviserType
-from models import *
 
 
 class AdviserFramework:
@@ -31,20 +29,21 @@ class AdviserFramework:
         self.ltlf_parser = LTLf2nxParser()
         self.agents = agents
 
-    def complete_strategy_synthesis(self, results_path, verbose=False):
+    def complete_strategy_synthesis(self, results_path, compute_strategies=False, verbose=False):
         abs_start_time = time.time()
         self.create_synth_games()
         winnable = self.check_winnable()
 
         if all(winnable):
             print('No adviser computation necessary, winning strategies already exists!')
-            print('Computing Strategies...\n')
-            self.create_strategies()
+            if compute_strategies:
+                print('Computing Strategies...\n')
+                self.create_strategies()
 
-            print('Pickling results into %s ...\n' % results_path)
-            pickle.dump(self.agents, open(results_path, 'wb'))
+                print('Pickling results into %s ...\n' % results_path)
+                pickle.dump(self.agents, open(results_path, 'wb'))
             print('Took', time.time() - abs_start_time, 'seconds in total.\n')
-            return
+            return time.time() - abs_start_time
 
         print('Winning strategy does not exist for some agents, will compute minimal assumptions.\n')
 
@@ -108,13 +107,16 @@ class AdviserFramework:
         winnable = self.check_winnable()
         if all(winnable):
             print('Adviser Computation successful, all agents have a winning strategy yielding all advisers!')
+
+        if compute_strategies:
+            print('Computing Strategies...\n')
+            self.create_strategies()
+
+            print('Pickling results into %s ...\n' % results_path)
+            pickle.dump(self.agents, open(results_path, 'wb'))
+
         print('Total time elapsed:', time.time() - abs_start_time, '\n')
-
-        print('Computing Strategies...\n')
-        self.create_strategies()
-
-        print('Pickling results into %s ...\n' % results_path)
-        pickle.dump(self.agents, open(results_path, 'wb'))
+        return time.time() - abs_start_time
 
     def create_synth_games(self):
         start_time = time.time()
@@ -163,7 +165,6 @@ class AdviserFramework:
             inv_state_ids = {v: k for k, v in state_ids.items()}
             for state_id, act in strat.items():
                 if act == '-':
-                    # print("state", inv_state_ids[int(state_id)], "has no action associated with in computed strategy.")
                     # add "stay" as recommended action as the agent has fulfilled their goal
                     state = inv_state_ids[int(state_id)]
                     agent.strategy[state] = 'stay'
@@ -212,4 +213,3 @@ class AdviserFramework:
                     other_agent.add_other_adviser(ssa)
 
         return safety_changed
-

@@ -119,14 +119,17 @@ def office_5x10_mdp(r_id, n_bins=1):
     return m
 
 
-def office_spillage_5x10_mdp(r_id, n_bins=1):
+def office_spillage_5x10_mdp(r_id, is_bin, n_bins, n_cleaners):
     m = grid_directions_mdp(10, 5)
 
     m.graph['name'] = 'robot' + r_id
     m.graph['init'] = '%i,%i_fu' % (random.randint(0, 9), random.randint(0, 4))
-    m.graph['ap'] = ['OFF0' + r_id, 'OFF1' + r_id, 'OFF2' + r_id, 'OFF3' + r_id, 'OFF4' + r_id]
-    for n in range(n_bins):
-        m.graph['ap'].append('BIN%i' % n + r_id)
+    m.graph['ap'] = []
+    for n in range(n_cleaners):
+         m.graph['ap'].append('OFF%i' % n + r_id)
+    if is_bin:
+        for n in range(n_bins):
+            m.graph['ap'].append('BIN%i' % n + r_id)
 
     # walls
     doors_up = [1, 4, 8]
@@ -166,16 +169,17 @@ def office_spillage_5x10_mdp(r_id, n_bins=1):
             directions = ['_fu', '_fr', '_fd', '_fl']
             for d in directions:
                 bit_str = ''
-                for o in range(5):          # lower offices
+                for o in range(n_cleaners):          # lower offices
                     if y > 2 and 2*o <= x <= 2*o + 1:
                         bit_str += '1'
                     else:
                         bit_str += '0'
-                for n in range(n_bins):     # bins
-                    if x == bin_coords[n][0] and y == bin_coords[n][1]:
-                        bit_str += '1'
-                    else:
-                        bit_str += '0'
+                if is_bin:
+                    for n in range(n_bins):     # bins
+                        if x == bin_coords[n][0] and y == bin_coords[n][1]:
+                            bit_str += '1'
+                        else:
+                            bit_str += '0'
                 attrs[pos + d] = [bit_str]
 
     nx.set_node_attributes(m, attrs, 'ap')

@@ -33,3 +33,12 @@ class TestAdviser(unittest.TestCase):
         # partially reducible should get partially reduced
         res = reduce_set_of_guards({'110', '010', '100'})
         self.assertEqual(res, {'X10', '1X0'})
+        # completely reducible
+        res = reduce_set_of_guards({'00', '10', '01', '11'})
+        self.assertEqual(res, {'XX'})
+        # completely reducible with partial reductions should work as well
+        res = reduce_set_of_guards({'X1', '1X', '00'})
+        self.assertEqual(res, {'XX'})
+        # same as above
+        res = reduce_set_of_guards({'1XX', 'X1X', 'XX1', '000'})
+        self.assertEqual(res, {'XXX'})

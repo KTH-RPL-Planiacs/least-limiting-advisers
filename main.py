@@ -3,6 +3,7 @@ from adviser_framework import AdviserFramework
 from models.corridor import corridor_directions_mdp
 from models.misc import *
 from models.office_generator import *
+import statistics
 
 
 def running_example():
@@ -11,7 +12,7 @@ def running_example():
               AgentSynthGame(mdp=corridor_directions_mdp(r_id='B', init_state='end_r_fl'),
                              formula='F(elb) & G!(critb & crita)')]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis('results/running_example.p', verbose=True)
+    return framework.complete_strategy_synthesis('results/running_example.p', verbose=True)
 
 
 def office_10x5(n_agents, n_bins):
@@ -23,23 +24,51 @@ def office_10x5(n_agents, n_bins):
         ltlf = ltlf[:-3]
         agents.append(AgentSynthGame(mdp=office_5x10_mdp(r_id='%i' % n, n_bins=n_bins), formula=ltlf))
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_bins), verbose=True)
+    return framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_bins), verbose=True)
 
 
-def dumb_stuff():
+def office_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
+    assert n_clean_agents <= 5, 'office layout only allows for max 5 cleaning agents.'
+    agents = []
+
+    # BIN AGENTS
+    for n in range(n_bin_agents):
+        ltlf = ''
+        for i in range(n_bins):
+            ltlf += '(F bin%i%i) & ' % (i, n)
+        ltlf = ltlf[:-3]
+        agents.append(AgentSynthGame(mdp=office_spillage_5x10_mdp(r_id='%i' % n, n_bins=n_bins, is_bin=True, n_cleaners=n_clean_agents), formula=ltlf))
+
+    # SPILLAGE AGENTS
+    for n in range(n_bin_agents, n_bin_agents+n_clean_agents):
+        ltlf = '(F off%i%i) & ' % (n - n_clean_agents - 1, n)
+        for i in range(n_bin_agents):
+            ltlf += '(G !off%i%i) & ' % (n - n_clean_agents - 1, i)
+        ltlf = ltlf[:-3]
+        agents.append(AgentSynthGame(mdp=office_spillage_5x10_mdp(r_id='%i' % n, n_bins=n_bins, is_bin=False, n_cleaners=n_clean_agents), formula=ltlf))
+    framework = AdviserFramework(agents)
+    return framework.complete_strategy_synthesis('results/office_spillage_10x5_%i_%i_%i.p' % (n_bin_agents, n_bins, n_clean_agents), verbose=True)
+
+
+def switch_test():
     agents = [
         AgentSynthGame(mdp=switch_mdp('0', 'off'), formula='G !on0'),
-        AgentSynthGame(mdp=switch_mdp('1', 'off'), formula='G !on0'),
-        AgentSynthGame(mdp=switch_mdp('2', 'off'), formula='G !on1')
+        AgentSynthGame(mdp=switch_mdp('1', 'off'), formula='G !on0')
     ]
     framework = AdviserFramework(agents)
-    framework.complete_strategy_synthesis('results/dumb.p', verbose=True)
+    return framework.complete_strategy_synthesis('results/switch_test.p', verbose=True)
 
 
 if __name__ == '__main__':
+    times = []
+    for _ in range(10):
+        # times.append(office_10x5(n_agents=5, n_bins=3))
+        times.append(office_spillage_10x5(n_bin_agents=2, n_bins=1, n_clean_agents=1))
+    print('MEAN TIME:', statistics.mean(times))
+    print('STD DEV:', statistics.stdev(times))
     # running_example()
-    office_10x5(n_agents=2, n_bins=2)
-    # dumb_stuff()
+    # office_spillage_10x5(n_bin_agents=2, n_bins=1, n_clean_agents=1)
+    # switch_test()
 
 # def intersection():
 #     agents = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'),
