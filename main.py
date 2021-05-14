@@ -41,9 +41,9 @@ def office_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
 
     # SPILLAGE AGENTS
     for n in range(n_bin_agents, n_bin_agents+n_clean_agents):
-        ltlf = '(F off%i%i) & ' % (n - n_clean_agents - 1, n)
+        ltlf = '(F off%i%i) & ' % (n - n_bin_agents, n)
         for i in range(n_bin_agents):
-            ltlf += '(G !off%i%i) & ' % (n - n_clean_agents - 1, i)
+            ltlf += '(G !off%i%i) & ' % (n - n_bin_agents, i)
         ltlf = ltlf[:-3]
         agents.append(AgentSynthGame(mdp=office_spillage_5x10_mdp(r_id='%i' % n, n_bins=n_bins, is_bin=False, n_cleaners=n_clean_agents), formula=ltlf))
     framework = AdviserFramework(agents)
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     times = []
     for _ in range(10):
         # times.append(office_10x5(n_agents=5, n_bins=3))
-        times.append(office_spillage_10x5(n_bin_agents=2, n_bins=1, n_clean_agents=1))
+        times.append(office_spillage_10x5(n_bin_agents=2, n_clean_agents=1, n_bins=1))
     print('MEAN TIME:', statistics.mean(times))
     print('STD DEV:', statistics.stdev(times))
     # running_example()
