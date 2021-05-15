@@ -61,6 +61,10 @@ def minimal_fairness_edges(synth, name, prism_handler, test=False):
 
     # start by assuming all player-2 edges are necessary
     fairness_edges = list(filter(filter_player2, synth.edges(data=True)))
+    for edge in filter(filter_player2, synth.edges(data=True)):
+        if len(list(synth.successors(edge[0]))) == 1:
+            fairness_edges.remove(edge)
+
     assume_fair_synth = construct_fair_game(synth, fairness_edges)
 
     # PRISM translations
