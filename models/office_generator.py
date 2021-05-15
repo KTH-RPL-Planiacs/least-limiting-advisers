@@ -75,8 +75,10 @@ def office_5x10_mdp(r_id, n_bins=1):
     for x in range(10):
         if x not in doors_up:
             m.remove_node('%i,2_fu_m' % x)
+            m.remove_node('%i,1_fd_m' % x)
         if x not in doors_down:
             m.remove_node('%i,2_fd_m' % x)
+            m.remove_node('%i,3_fu_m' % x)
 
     upper_walls = [2, 6]
     lower_walls = [1, 3, 5, 7]
@@ -137,8 +139,10 @@ def office_spillage_5x10_mdp(r_id, is_bin, n_bins, n_cleaners):
     for x in range(10):
         if x not in doors_up:
             m.remove_node('%i,2_fu_m' % x)
+            m.remove_node('%i,1_fd_m' % x)
         if x not in doors_down:
             m.remove_node('%i,2_fd_m' % x)
+            m.remove_node('%i,3_fu_m' % x)
 
     upper_walls = [2, 6]
     lower_walls = [1, 3, 5, 7]
@@ -180,6 +184,65 @@ def office_spillage_5x10_mdp(r_id, is_bin, n_bins, n_cleaners):
                             bit_str += '1'
                         else:
                             bit_str += '0'
+                attrs[pos + d] = [bit_str]
+
+    nx.set_node_attributes(m, attrs, 'ap')
+    return m
+
+
+def office_critical_doors_5x10_mdp(r_id, n_bins=1):
+    m = grid_directions_mdp(10, 5)
+
+    m.graph['name'] = 'robot' + r_id
+    m.graph['init'] = '%i,%i_fu' % (random.randint(0, 9), random.randint(0, 4))
+    m.graph['ap'] = []
+    for n in range(n_bins):
+        m.graph['ap'].append('BIN%i' % n + r_id)
+
+    # walls
+    doors_up = [1, 4, 8]
+    doors_down = [1, 3, 5, 7, 9]
+    for x in range(10):
+        if x not in doors_up:
+            m.remove_node('%i,2_fu_m' % x)
+        if x not in doors_down:
+            m.remove_node('%i,2_fd_m' % x)
+
+    upper_walls = [2, 6]
+    lower_walls = [1, 3, 5, 7]
+    for w in upper_walls:
+        m.remove_node('%i,0_fr_m' % w)
+        m.remove_node('%i,1_fr_m' % w)
+        m.remove_node('%i,0_fl_m' % (w + 1))
+        m.remove_node('%i,1_fl_m' % (w + 1))
+
+    for w in lower_walls:
+        m.remove_node('%i,3_fr_m' % w)
+        m.remove_node('%i,4_fr_m' % w)
+        m.remove_node('%i,3_fl_m' % (w + 1))
+        m.remove_node('%i,4_fl_m' % (w + 1))
+
+    # labelling
+    attrs = {}
+    bin_coords = []
+
+    for n in range(n_bins):
+        bin_x = random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        bin_y = random.choice([0, 1, 3, 4])                     # skip the corridor
+        bin_coords.append((bin_x, bin_y))
+
+    for x in range(10):
+        for y in range(5):
+            pos = '%i,%i' % (x, y)
+            directions = ['_fu', '_fr', '_fd', '_fl']
+
+            for d in directions:
+                bit_str = ''
+                for n in range(n_bins):
+                    if x == bin_coords[n][0] and y == bin_coords[n][1]:
+                        bit_str += '1'
+                    else:
+                        bit_str += '0'
                 attrs[pos + d] = [bit_str]
 
     nx.set_node_attributes(m, attrs, 'ap')
