@@ -29,7 +29,7 @@ def office_10x5(n_agents, n_bins):
     return framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_bins), verbose=True)
 
 
-def office_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
+def office_safe_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
     assert n_clean_agents <= 5, 'office layout only allows for max 5 cleaning agents.'
     agents = []
 
@@ -52,6 +52,29 @@ def office_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
     return framework.complete_strategy_synthesis('results/office_spillage_10x5_%i_%i_%i.p' % (n_bin_agents, n_bins, n_clean_agents), verbose=True)
 
 
+def office_fair_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
+    assert n_clean_agents <= 5, 'office layout only allows for max 5 cleaning agents.'
+    agents = []
+
+    # BIN AGENTS
+    for n in range(n_bin_agents):
+        ltlf = ''
+        for i in range(n_bins):
+            ltlf += '(F bin%i%i) & ' % (i, n)
+        ltlf = ltlf[:-3]
+        agents.append(AgentSynthGame(mdp=office_spillage_5x10_mdp(r_id='%i' % n, n_bins=n_bins, is_bin=True, n_cleaners=n_clean_agents), formula=ltlf))
+
+    # SPILLAGE AGENTS
+    for n in range(n_bin_agents, n_bin_agents+n_clean_agents):
+        ltlf = '(F (off%i%i &' % (n - n_bin_agents, n)
+        for i in range(n_bin_agents):
+            ltlf += '!off%i%i & ' % (n - n_bin_agents, i)
+        ltlf = ltlf[:-3] + '))'
+        agents.append(AgentSynthGame(mdp=office_spillage_5x10_mdp(r_id='%i' % n, n_bins=n_bins, is_bin=False, n_cleaners=n_clean_agents), formula=ltlf))
+    framework = AdviserFramework(agents)
+    return framework.complete_strategy_synthesis('results/office_spillage_10x5_%i_%i_%i.p' % (n_bin_agents, n_bins, n_clean_agents), verbose=False)
+
+
 def office_crit_10x5(n_agents, n_doors):
     agents = []
     for n in range(n_agents):
@@ -64,8 +87,24 @@ def office_crit_10x5(n_agents, n_doors):
                 ltlf += '(door%i%i & door%i%i) & ' % (d, n, d, m)
             ltlf = ltlf[:-3] + ') & '
         ltlf = ltlf[:-3]
-        print(ltlf)
         agents.append(AgentSynthGame(mdp=office_critical_doors_5x10_mdp(r_id='%i' % n, n_doors=n_doors), formula=ltlf))
+    framework = AdviserFramework(agents)
+    return framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_doors), verbose=True)
+
+
+def office_crit_5x5(n_agents, n_doors):
+    agents = []
+    for n in range(n_agents):
+        ltlf = 'F bin%i & ' % n
+        for d in range(n_doors):
+            ltlf += 'G!('
+            for m in range(n_agents):
+                if m == n:
+                    continue
+                ltlf += '(door%i%i & door%i%i) & ' % (d, n, d, m)
+            ltlf = ltlf[:-3] + ') & '
+        ltlf = ltlf[:-3]
+        agents.append(AgentSynthGame(mdp=office_critical_doors_5x5_mdp(r_id='%i' % n, n_doors=n_doors), formula=ltlf))
     framework = AdviserFramework(agents)
     return framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_doors), verbose=True)
 
@@ -80,21 +119,24 @@ def switch_test():
 
 
 if __name__ == '__main__':
-    office_crit_10x5(n_agents=2, n_doors=1)
-    # running_example()
-    # results = []
-    # for n in range(1, 6):
-    #     times = []
-    #     while len(times) < 10:
-    #         # times.append(office_10x5(n_agents=5, n_bins=3))
-    #         try:
-    #             times.append(office_spillage_10x5(n_bin_agents=n, n_clean_agents=1, n_bins=1))
-    #         except:
-    #             print('WHOOPSIE!')
-    #     print('MEAN TIME:', statistics.mean(times))
-    #     print('STD DEV:', statistics.stdev(times))
-    #     results.append((statistics.mean(times), statistics.stdev(times)))
-    # print(results)
+
+    results = []
+    for m in range(3, 6):
+        for n in range(1, 6):
+            times = []
+            while len(times) < 10:
+                # times.append(office_10x5(n_agents=5, n_bins=3))
+                try:
+                    times.append(office_fair_spillage_10x5(n_bin_agents=n, n_bins=1, n_clean_agents=m))
+                except Exception as e:
+                    print(e)
+            print('MEAN TIME:', statistics.mean(times))
+            print('STD DEV:', statistics.stdev(times))
+            results.append((statistics.mean(times), statistics.stdev(times)))
+        print(results)
+        f = open("results.txt", "w")
+        f.write(results.__str__())
+        f.close()
 
 # def intersection():
 #     agents = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'),
