@@ -50,6 +50,22 @@ def office_spillage_10x5(n_bin_agents, n_bins, n_clean_agents):
     return framework.complete_strategy_synthesis('results/office_spillage_10x5_%i_%i_%i.p' % (n_bin_agents, n_bins, n_clean_agents), verbose=True)
 
 
+def office_crit_10x5(n_agents, n_doors):
+    agents = []
+    for n in range(n_agents):
+        ltlf = 'F bin%i & ' % n
+        for d in range(n_doors):
+            ltlf += 'G!('
+            for m in range(n_agents):
+                ltlf += 'TODO'
+            ltlf += ') & '
+        ltlf = ltlf[:-3]
+        print(ltlf)
+        agents.append(AgentSynthGame(mdp=office_critical_doors_5x10_mdp(r_id='%i' % n, n_doors=n_doors), formula=ltlf))
+    framework = AdviserFramework(agents)
+    return framework.complete_strategy_synthesis('results/office_10x5_%i_%i.p' % (n_agents, n_doors), verbose=True)
+
+
 def switch_test():
     agents = [
         AgentSynthGame(mdp=switch_mdp('0', 'off'), formula='G !on0'),
@@ -60,19 +76,21 @@ def switch_test():
 
 
 if __name__ == '__main__':
-    results = []
-    for n in range(1, 6):
-        times = []
-        while len(times) < 10:
-            # times.append(office_10x5(n_agents=5, n_bins=3))
-            try:
-                times.append(office_spillage_10x5(n_bin_agents=n, n_clean_agents=5, n_bins=1))
-            except:
-                print('WHOOPSIE!')
-        print('MEAN TIME:', statistics.mean(times))
-        print('STD DEV:', statistics.stdev(times))
-        results.append((statistics.mean(times), statistics.stdev(times)))
-    print(results)
+    office_crit_10x5(n_agents=2, n_doors=2)
+
+    # results = []
+    # for n in range(1, 6):
+    #     times = []
+    #     while len(times) < 10:
+    #         # times.append(office_10x5(n_agents=5, n_bins=3))
+    #         try:
+    #             times.append(office_spillage_10x5(n_bin_agents=n, n_clean_agents=1, n_bins=1))
+    #         except:
+    #             print('WHOOPSIE!')
+    #     print('MEAN TIME:', statistics.mean(times))
+    #     print('STD DEV:', statistics.stdev(times))
+    #     results.append((statistics.mean(times), statistics.stdev(times)))
+    # print(results)
 
 # def intersection():
 #     agents = [AgentSynthGame(mdp=intersection_no_turn_symmetric_labels_mdp(r_id='A', init_state='end_top'),
