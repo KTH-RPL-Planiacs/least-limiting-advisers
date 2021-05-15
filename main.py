@@ -1,3 +1,5 @@
+import sys
+
 from agent_synth_game import AgentSynthGame
 from adviser_framework import AdviserFramework
 from models.corridor import corridor_directions_mdp
@@ -57,8 +59,10 @@ def office_crit_10x5(n_agents, n_doors):
         for d in range(n_doors):
             ltlf += 'G!('
             for m in range(n_agents):
-                ltlf += 'TODO'
-            ltlf += ') & '
+                if m == n:
+                    continue
+                ltlf += '(door%i%i & door%i%i) & ' % (d, n, d, m)
+            ltlf = ltlf[:-3] + ') & '
         ltlf = ltlf[:-3]
         print(ltlf)
         agents.append(AgentSynthGame(mdp=office_critical_doors_5x10_mdp(r_id='%i' % n, n_doors=n_doors), formula=ltlf))
@@ -76,8 +80,8 @@ def switch_test():
 
 
 if __name__ == '__main__':
-    office_crit_10x5(n_agents=2, n_doors=2)
-
+    office_crit_10x5(n_agents=2, n_doors=1)
+    # running_example()
     # results = []
     # for n in range(1, 6):
     #     times = []

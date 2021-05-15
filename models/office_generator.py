@@ -199,6 +199,10 @@ def office_critical_doors_5x10_mdp(r_id, n_doors=1):
     m.graph['ap'] = ['BIN' + r_id]
     for n in range(n_doors):
         m.graph['ap'].append('DOOR%i' % n + r_id)
+    for n in range(n_doors):
+        m.graph['ap'].append('FD%i' % n + r_id)
+
+    attrs = {}
 
     # walls
     crit_sections = 0
@@ -207,6 +211,10 @@ def office_critical_doors_5x10_mdp(r_id, n_doors=1):
     for x in range(10):
         if x in doors_up:
             if crit_sections < n_doors:
+                facing_door_ap = '0' * ((2 * n_doors) + 1)
+                facing_door_ap = replace_char_in_string(facing_door_ap, n_doors + 1 + crit_sections, '1')
+                attrs['%i,2_fu' % x] = [facing_door_ap]
+                attrs['%i,1_fd' % x] = [facing_door_ap]
                 m.remove_edge('%i,2_fu_m' % x, '%i,1_fu' % x)
                 m.remove_edge('%i,1_fd_m' % x, '%i,2_fd' % x)
                 m.add_node('crit%i_fu' % crit_sections, player=1)
@@ -225,6 +233,10 @@ def office_critical_doors_5x10_mdp(r_id, n_doors=1):
             m.remove_node('%i,1_fd_m' % x)
         if x in doors_down:
             if crit_sections < n_doors:
+                facing_door_ap = '0' * ((2 * n_doors) + 1)
+                facing_door_ap = replace_char_in_string(facing_door_ap, n_doors + 1 + crit_sections, '1')
+                attrs['%i,2_fd' % x] = [facing_door_ap]
+                attrs['%i,3_fu' % x] = [facing_door_ap]
                 m.remove_edge('%i,2_fd_m' % x, '%i,3_fd' % x)
                 m.remove_edge('%i,3_fu_m' % x, '%i,2_fu' % x)
                 m.add_node('crit%i_fu' % crit_sections, player=1)
@@ -257,7 +269,6 @@ def office_critical_doors_5x10_mdp(r_id, n_doors=1):
         m.remove_node('%i,4_fl_m' % (w + 1))
 
     # labelling
-    attrs = {}
     bin_x = random.choice([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     bin_y = random.choice([0, 1, 3, 4])                     # skip the corridor
     for x in range(10):
@@ -266,13 +277,17 @@ def office_critical_doors_5x10_mdp(r_id, n_doors=1):
             directions = ['_fu', '_fr', '_fd', '_fl']
 
             for d in directions:
-                bit_str = '0' * (n_doors + 1)
+                bit_str = '0' * ((2 * n_doors) + 1)
+
+                if (pos + d) in attrs.keys():
+                    bit_str = attrs[pos + d][0]
+
                 if x == bin_x and y == bin_y:
                     bit_str = replace_char_in_string(bit_str, 0, '1')
                 attrs[pos + d] = [bit_str]
 
     for n in range(n_doors):
-        bit_str = '0' * (n_doors + 1)
+        bit_str = '0' * ((2 * n_doors) + 1)
         bit_str = replace_char_in_string(bit_str, n+1, '1')
         attrs['crit%i_fu' % n] = [bit_str]
         attrs['crit%i_fd' % n] = [bit_str]
