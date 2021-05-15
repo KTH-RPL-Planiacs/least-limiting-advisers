@@ -216,8 +216,6 @@ def simplest_adviser(synth, edges, adv_type):
 
         # reduce obs -> for each ap, check if a state with that ap flipped, but others same exists.
         reduced_obs = obs
-        print('')
-        print('WE WILL REDUCE THIS', obs)
         for i, o in enumerate(obs):
             # construct hypothetical obs
             # TODO: currently this only reduces 0 entries
@@ -236,7 +234,6 @@ def simplest_adviser(synth, edges, adv_type):
 
             if can_be_reduced:  # we can reduce!
                 reduced_obs = replace_guard_bit(reduced_obs, i, 'X')
-        print('WE REDUCED TO THIS', reduced_obs)
         # add the reduced obs,sog to the adviser
         if reduced_obs not in adv_obj.adviser.keys():
             adv_obj.adviser[reduced_obs] = set(sog)
