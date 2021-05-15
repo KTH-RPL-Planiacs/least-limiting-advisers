@@ -152,12 +152,12 @@ def corridor_directions_mdp(r_id, init_state):
     m.add_edge('cor_l_fl', 'cor_l_fl_t', act='turn')
     m.add_edge('cor_l_fl', 'cor_l_fl_m', act='move')
 
-    m.add_edge('crit_fr', 'crit_fr_s', act='stay')
-    m.add_edge('crit_fr', 'crit_fr_t', act='turn')
+    #m.add_edge('crit_fr', 'crit_fr_s', act='stay')
+    #m.add_edge('crit_fr', 'crit_fr_t', act='turn')
     m.add_edge('crit_fr', 'crit_fr_m', act='move')
 
-    m.add_edge('crit_fl', 'crit_fl_s', act='stay')
-    m.add_edge('crit_fl', 'crit_fl_t', act='turn')
+    #m.add_edge('crit_fl', 'crit_fl_s', act='stay')
+    #m.add_edge('crit_fl', 'crit_fl_t', act='turn')
     m.add_edge('crit_fl', 'crit_fl_m', act='move')
 
     m.add_edge('cor_r_fr', 'cor_r_fr_s', act='stay')
