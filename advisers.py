@@ -71,7 +71,7 @@ class AdviserObject:
             if all(c == 'X' for c in pre):
                 spec = 'G(!(' + adv_f[0:-3] + '))'
             else:
-                spec = 'G(' + pre_f[0:-3] + ' -> X !(' + adv_f[0:-3] + '))'
+                spec = 'G(' + pre_f[0:-3] + ' -> WX !(' + adv_f[0:-3] + '))'
             if overall_not_empty:
                 safety_formulas.append(spec)
 
@@ -186,6 +186,20 @@ def compare_obs(test_obs, existing_obs):
     return True
 
 
+def compare_with_clean_obs(test_obs, existing_obs):
+
+    if len(test_obs) != len(existing_obs):
+        return False
+
+    for i in range(len(test_obs)):
+        if test_obs[i] == 'X' or existing_obs[i] == 'X':
+            continue
+        if test_obs[i] != existing_obs[i]:
+            return False
+
+    return True
+
+
 def simplest_adviser(synth, edges, adv_type):
     adv_obj = AdviserObject(pre_ap=synth.graph['ap'],
                             adv_ap=synth.graph['env_ap'],
@@ -202,6 +216,8 @@ def simplest_adviser(synth, edges, adv_type):
 
         # reduce obs -> for each ap, check if a state with that ap flipped, but others same exists.
         reduced_obs = obs
+        print('')
+        print('WE WILL REDUCE THIS', obs)
         for i, o in enumerate(obs):
             # construct hypothetical obs
             # TODO: currently this only reduces 0 entries
@@ -209,19 +225,18 @@ def simplest_adviser(synth, edges, adv_type):
 
             if test_obs == reduced_obs:
                 continue
-
             # check if that observation exists
             can_be_reduced = True
             for node, data in synth.nodes(data=True):
                 if 'ap' not in data.keys():
                     continue                # this is not a player 1 state
                 existing_obs = data['ap']
-                if compare_obs(test_obs, existing_obs):    # this hypothetical other obs exists, so we cannot reduce
+                if compare_with_clean_obs(test_obs, existing_obs):    # this hypothetical other obs exists, so we cannot reduce
                     can_be_reduced = False
 
             if can_be_reduced:  # we can reduce!
                 reduced_obs = replace_guard_bit(reduced_obs, i, 'X')
-
+        print('WE REDUCED TO THIS', reduced_obs)
         # add the reduced obs,sog to the adviser
         if reduced_obs not in adv_obj.adviser.keys():
             adv_obj.adviser[reduced_obs] = set(sog)
