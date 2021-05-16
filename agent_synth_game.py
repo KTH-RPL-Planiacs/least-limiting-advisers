@@ -115,7 +115,6 @@ class AgentSynthGame:
             parser.parse_formula(self.full_spec)
             start_time = time.time()
             self.dfa = parser.to_nxgraph()
-            print("DFA creation took", time.time() - start_time, "seconds.")
 
     def create_synthesis_game(self):
         assert self.dfa, '<AgentSynthGame.create_synthesis_game> set self.dfa before calling this function!'
