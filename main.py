@@ -17,6 +17,23 @@ def running_example():
     return framework.complete_strategy_synthesis('results/running_example.p', verbose=True)
 
 
+def scalable_running_example(n_agents):
+    assert n_agents > 1
+    agents = []
+    for n in range(n_agents):
+        ltlf = 'F er%i & ' % n
+        ltlf += 'G!('
+        for m in range(n_agents):
+            if m == n:
+                continue
+            ltlf += '(crit%i & crit%i) | ' % (n, m)
+        ltlf = ltlf[:-3] + ' )'
+        print(ltlf)
+        agents.append(AgentSynthGame(mdp=corridor_directions_mdp(r_id='%i' % n, init_state='end_l_fr'), formula=ltlf))
+    framework = AdviserFramework(agents)
+    return framework.complete_strategy_synthesis('results/scalable_running_example_%i.p' % n_agents, verbose=True)
+
+
 def office_10x5(n_agents, n_bins):
     agents = []
     for n in range(n_agents):
@@ -119,15 +136,17 @@ def switch_test():
 
 
 if __name__ == '__main__':
+    scalable_running_example(n_agents=3)
+    sys.exit()
 
     results = []
-    for m in range(3, 6):
-        for n in range(1, 6):
+    for m in range(1, 6):
+        for n in range(1, 4):
             times = []
             while len(times) < 10:
                 # times.append(office_10x5(n_agents=5, n_bins=3))
                 try:
-                    times.append(office_fair_spillage_10x5(n_bin_agents=n, n_bins=1, n_clean_agents=m))
+                    times.append(office_10x5(n_agents=m, n_bins=n))
                 except Exception as e:
                     print(e)
             print('MEAN TIME:', statistics.mean(times))
