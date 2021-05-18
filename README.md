@@ -18,10 +18,9 @@ pip3 install py4j
 ```
 
 ### Other Dependencies
-pygraphviz requires graphviz and is used for dot-graph output of automata. pygame is used for visualization purposes.
+pygame is used for visualization purposes.
 ```
-sudo apt install graphviz
-pip3 install networkx ltlf2dfa pygraphviz pygame
+pip3 install networkx ltlf2dfa pygame
 ```
 
 ## Running the Code
