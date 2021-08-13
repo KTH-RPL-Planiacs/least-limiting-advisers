@@ -2,6 +2,7 @@
 test/data/*
 data/*
 .vscode/*
+.idea/*
 
 # ignore prism-generated files
 prismhandler/*.tra
