@@ -1,4 +1,6 @@
-# ltlf-assum
+# Decentralized Multi-Agent Strategy Synthesis under LTLf Specifications via Exchange of Least-Limiting Advisers
+
+This repository provides implementation and case studies for the paper "Decentralized Multi-Agent Strategy Synthesis under LTLf Specifications via Exchange of Least-Limiting Advisers"
 
 ## Installation
 
