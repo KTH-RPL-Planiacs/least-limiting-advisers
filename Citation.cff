@@ -1,24 +1,24 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software, please cite the software and the paper."
 authors:
-- affiliation: "KTH Royal Institute of Technology, Stockholm"
-  family-names: Schuppe
-  given-names: "Georg Friedrich"
-  orcid: "https://orcid.org/0000-0003-3512-2326"
-title: "Least-Limiting Adviser Synthesis Tool"
-version: 0.1.0
-license: MIT
-url: "https://github.com/KTH-RPL-Planiacs/least-limiting-advisers"
-preferred-citation:
-  type: proceedings
-  collection-title: "Proceedings of the 2006 Annual Meeting"
-  conference:
-        name: "IEEE International Symposium on Multi-Robot and Multi-Agent Systems"
-  authors:
-  - family-names: "Schuppe"
+  - affiliation: "KTH Royal Institute of Technology, Stockholm"
+    family-names: Schuppe
     given-names: "Georg Friedrich"
     orcid: "https://orcid.org/0000-0003-3512-2326"
-  - family-names: "Tumova"
-    given-names: "Jana"
-  title: "Decentralized Multi-Agent Strategy Synthesis under LTLf Specifications via Exchange of Least-Limiting Advisers"
-  year: 2021
+title: "Least-Limiting Adviser Synthesis Tool"
+version: 0.1.0
+date-released: 2021-09-01
+references:
+  - type: conference-paper
+    authors:
+      - family-names: "Schuppe"
+        given-names: "Georg Friedrich"
+        orcid: "https://orcid.org/0000-0003-3512-2326"
+      - family-names: "Tumova"
+        given-names: "Jana"
+    title: "Decentralized Multi-Agent Strategy Synthesis under LTLf Specifications via Exchange of Least-Limiting Advisers"
+    year: 2021
+    collection-title: "2021 International Symposium on Multi-Robot and Multi-Agent Systems (MRS)"
+    conference:
+      name: International Symposium on Multi-Robot and Multi-Agent Systems
+
