@@ -1,7 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Schuppe"
+- affiliation: "KTH Royal Institute of Technology, Stockholm"
+  family-names: Schuppe
   given-names: "Georg Friedrich"
   orcid: "https://orcid.org/0000-0003-3512-2326"
 title: "Least-Limiting Adviser Synthesis Tool"
@@ -16,8 +17,6 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0003-3512-2326"
   - family-names: "Tumova"
     given-names: "Jana"
-    orcid: "https://orcid.org/0000-0003-4173-2593"
-  collection-title: "To be published"
-  collection-type: proceedings
+  journal: "To be published"
   title: "Decentralized Multi-Agent Strategy Synthesis under LTLf Specifications via Exchange of Least-Limiting Advisers"
   year: 2021
