@@ -10,7 +10,7 @@ version: 0.1.0
 license: MIT
 url: "https://github.com/KTH-RPL-Planiacs/least-limiting-advisers"
 preferred-citation:
-  type: conference-paper
+  type: proceedings
   conference:
         name: "IEEE International Symposium on Multi-Robot and Multi-Agent Systems"
   authors:
